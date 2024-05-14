@@ -1,0 +1,16 @@
+services:
+  pg:
+    build: ./
+    volumes:
+      - ../schema:/sql
+      - ../io:/io
+      - pg-data:/var/lib/postgresql/data
+    environment: 
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    ports:
+      - 5432:5432
+    # command: bash -c 'tail -f /dev/null'
+
+volumes:
+  pg-data:
+    driver: local
