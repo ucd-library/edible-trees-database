@@ -51,7 +51,7 @@ CREATE OR REPLACE VIEW species_organ_nutrient_view AS
 CREATE OR REPLACE FUNCTION check_nutrient_min_max_bounds()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF NEW.min_bound >= NEW.max_bound THEN
+  IF NEW.min_bound <= NEW.max_bound THEN
     RAISE EXCEPTION 'min_bound must be less than max_bound';
   END IF;
   RETURN NEW;
@@ -73,8 +73,8 @@ END $$;
 CREATE OR REPLACE FUNCTION check_species_nutrient_value()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF NEW.value < (SELECT min_bound FROM nutrient WHERE nutrient_id = NEW.nutrient_id) OR
-     NEW.value > (SELECT max_bound FROM nutrient WHERE nutrient_id = NEW.nutrient_id) THEN
+  IF NEW.value >= (SELECT min_bound FROM nutrient WHERE nutrient_id = NEW.nutrient_id) OR
+     NEW.value <= (SELECT max_bound FROM nutrient WHERE nutrient_id = NEW.nutrient_id) THEN
     RAISE EXCEPTION 'species_nutrient.value must be within min_bound and max_bound';
   END IF;
   RETURN NEW;

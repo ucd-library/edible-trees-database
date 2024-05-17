@@ -4,12 +4,15 @@ CREATE TABLE IF NOT EXISTS organ (
   name TEXT NOT NULL UNIQUE
 );
 
+-- a relationship table between common_name and organ
 CREATE TABLE IF NOT EXISTS species_organ (
   species_organ UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   common_name_id UUID NOT NULL REFERENCES common_name(common_name_id),
   organ_id UUID NOT NULL REFERENCES organ(organ_id)
 );
 
+-- join the species, genus, common_name, and organ tables for the 
+-- full species organ view with text names
 CREATE OR REPLACE VIEW species_organ_view AS
   SELECT
     g.name AS genus_name,
@@ -26,6 +29,7 @@ CREATE OR REPLACE VIEW species_organ_view AS
   JOIN species_organ so ON cn.common_name_id = so.common_name_id
   JOIN organ o ON so.organ_id = o.organ_id;
 
+-- create a function to get the organ_id from the organ table
 CREATE OR REPLACE FUNCTION get_organ_id(organ_name_in TEXT) RETURNS UUID AS $$
 DECLARE
   oid UUID;
@@ -38,6 +42,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- create a function to add a species/organ relationship
 CREATE OR REPLACE FUNCTION add_species_organ(
   genus_name_in TEXT, 
   species_name_in TEXT, 

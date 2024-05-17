@@ -1,8 +1,10 @@
+-- simple unit table for controlled vocabulary
 CREATE TABLE IF NOT EXISTS unit (
   unit_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL UNIQUE
 );
 
+-- create a function to get the unit_id from the unit table by text name
 CREATE OR REPLACE FUNCTION get_unit_id(unit_name_in TEXT) RETURNS UUID AS $$
 DECLARE
   uid UUID;
