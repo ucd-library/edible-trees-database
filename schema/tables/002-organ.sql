@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS organ (
 -- a relationship table between common_name and organ
 CREATE TABLE IF NOT EXISTS species_organ (
   species_organ UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  common_name_id UUID NOT NULL REFERENCES common_name(common_name_id),
+  species_id UUID NOT NULL REFERENCES species(species_id),
   organ_id UUID NOT NULL REFERENCES organ(organ_id)
 );
 
@@ -23,8 +23,8 @@ CREATE OR REPLACE VIEW species_organ_view AS
     cn.common_name_id AS common_name_id,
     o.name AS organ_name,
     o.organ_id AS organ_id
-  FROM common_name cn
-  JOIN species s ON cn.species_id = s.species_id
+  FROM species s 
+  JOIN common_name ON cn.species_id = s.species_id
   JOIN genus g ON s.genus_id = g.genus_id
   JOIN species_organ so ON cn.common_name_id = so.common_name_id
   JOIN organ o ON so.organ_id = o.organ_id;
@@ -45,15 +45,14 @@ $$ LANGUAGE plpgsql;
 -- create a function to add a species/organ relationship
 CREATE OR REPLACE FUNCTION add_species_organ(
   genus_name_in TEXT, 
-  species_name_in TEXT, 
-  common_name_in TEXT, 
+  species_name_in TEXT,  
   organ_name_in TEXT) 
 RETURNS VOID AS $$
 DECLARE
   sid UUID;
   oid UUID;
 BEGIN
-  SELECT get_species_id(genus_name_in, species_name_in, common_name_in) INTO sid;
+  SELECT get_species_id(genus_name_in, species_name_in) INTO sid;
   SELECT organ_id INTO oid FROM organ WHERE name = organ_name_in;
   INSERT INTO species_organ (common_name_id, organ_id) VALUES (sid, oid);
 END;

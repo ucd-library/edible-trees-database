@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS genus (
   genus_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL UNIQUE
+  name TEXT NOT NULL UNIQUE,
+  source UUID NOT NULL REFERENCES source(source_id) 
 );
 
 CREATE TABLE IF NOT EXISTS species (
@@ -29,8 +30,8 @@ CREATE OR REPLACE VIEW species_view AS
   LEFT JOIN genus g ON s.genus_id = g.genus_id;
 
 -- create a function to get the species_id from the species_view
--- given the genus_name, species_name, and common_name
-CREATE OR REPLACE FUNCTION get_species_id(genus_name_in TEXT, species_name_in TEXT, common_name_in TEXT)
+-- given the genus_name, species_name
+CREATE OR REPLACE FUNCTION get_species_id(genus_name_in TEXT, species_name_in TEXT)
 RETURNS UUID AS $$
 DECLARE
   sid UUID;
@@ -40,11 +41,11 @@ BEGIN
   FROM species_view 
   WHERE 
     genus_name = genus_name_in AND 
-    species_name = species_name_in AND 
-    common_name = common_name_in;
+    species_name = species_name_in
+  LIMIT 1;
   
   IF sid IS NULL THEN
-    RAISE EXCEPTION 'Species genus=%, species=%, common name=%, does not exist', genus_name_in, species_name_in, common_name_in;
+    RAISE EXCEPTION 'Species genus=%, species=% does not exist', genus_name_in, species_name_in;
   END IF;
 
   RETURN sid;
