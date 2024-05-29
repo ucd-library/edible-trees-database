@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS species_organ_nutrient (
   organ_id UUID NOT NULL REFERENCES organ(organ_id),
   nutrient_id UUID NOT NULL REFERENCES nutrient(nutrient_id),
   value INTEGER NOT NULL,
-  UNIQUE (common_name_id, organ_id, nutrient_id)
+  UNIQUE (species_id, organ_id, nutrient_id)
 );
 
 CREATE OR REPLACE VIEW species_organ_nutrient_view AS
@@ -33,7 +33,7 @@ CREATE OR REPLACE VIEW species_organ_nutrient_view AS
     s.species_id AS species_id,
     o.name AS organ_name,
     o.organ_id AS organ_id,
-    cn.name AS common_name_name,
+    cn.name AS common_name,
     cn.common_name_id AS common_name_id,
     n.common_name AS nutrient_name,
     n.nutrient_id AS nutrient_id,
@@ -42,7 +42,7 @@ CREATE OR REPLACE VIEW species_organ_nutrient_view AS
     n.max_bound AS max_bound,
     son.value AS value
   FROM species_organ_nutrient son
-  LEFT JOIN species s ON con.species_id = s.species_id
+  LEFT JOIN species s ON son.species_id = s.species_id
   LEFT JOIN common_name cn ON s.species_id = cn.species_id
   LEFT JOIN genus g ON s.genus_id = g.genus_id
   LEFT JOIN organ o ON son.organ_id = o.organ_id
@@ -57,13 +57,13 @@ CREATE OR REPLACE VIEW ffar_view AS
     species_name as "Species",
     common_name as "Common Name",
     nutrient_name as "Nutrient Name",
-    nutrient_unit as "Nutrient Unit",
+    unit_name as "Nutrient Unit",
     min_bound as "Min",
     max_bound as "Max",
     value as "Amount"
   FROM species_organ_nutrient_view;
 
-  CREATE OR REPLACE FUNCTION insert_farr_view()
+CREATE OR REPLACE FUNCTION insert_ffar_view()
   RETURNS TRIGGER AS $$
   BEGIN
     -- Note, this uses ensure, which assumes the data is trustworthy and you should add values if they don't exist
@@ -74,15 +74,15 @@ CREATE OR REPLACE VIEW ffar_view AS
 
     -- SELECT * FROM ensure_nutrient(NEW."Nutrient Name", NEW."Nutrient Unit", NEW."Min", NEW."Max");
 
-    SELECT * FROM add_species_organ_nutrient(NEW."Genus", NEW."Species", NEW."Common Name", NEW."Organ", NEW."Nutrient Name", NEW."Amount")
+    SELECT * FROM add_species_organ_nutrient(NEW."Genus", NEW."Species", NEW."Common Name", NEW."Organ", NEW."Nutrient Name", NEW."Amount");
     RETURN NEW;
   END;
   $$ LANGUAGE plpgsql;
 
-  CREATE TRIGGER insert_farr_view_trigger
-  INSTEAD OF INSERT ON farr_view
-  FOR EACH ROW
-  EXECUTE FUNCTION insert_farr_view();
+CREATE TRIGGER insert_ffar_view_trigger
+INSTEAD OF INSERT ON ffar_view
+FOR EACH ROW
+EXECUTE FUNCTION insert_ffar_view();
 
 
 CREATE OR REPLACE FUNCTION check_nutrient_min_max_bounds()

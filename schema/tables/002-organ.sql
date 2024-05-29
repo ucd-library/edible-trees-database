@@ -24,9 +24,9 @@ CREATE OR REPLACE VIEW species_organ_view AS
     o.name AS organ_name,
     o.organ_id AS organ_id
   FROM species s 
-  JOIN common_name ON cn.species_id = s.species_id
+  JOIN common_name cn ON cn.species_id = s.species_id
   JOIN genus g ON s.genus_id = g.genus_id
-  JOIN species_organ so ON cn.common_name_id = so.common_name_id
+  JOIN species_organ so ON s.species_id = so.species_id
   JOIN organ o ON so.organ_id = o.organ_id;
 
 -- create a function to get the organ_id from the organ table

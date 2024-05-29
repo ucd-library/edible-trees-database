@@ -1,7 +1,6 @@
 CREATE TABLE IF NOT EXISTS genus (
   genus_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL UNIQUE,
-  source UUID NOT NULL REFERENCES source(source_id) 
+  name TEXT NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS species (
