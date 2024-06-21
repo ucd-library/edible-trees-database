@@ -18,6 +18,8 @@ export PGOPTIONS=--search_path=$SCHEMA,public
 psql -f ./tables/enums/qa_status.sql
 
 # tables
+psql -f ./tables/000-source.sql
+psql -f ./tables/001-genus.sql
 psql -f ./tables/001-species.sql
 psql -f ./tables/002-organ.sql
 psql -f ./tables/003-unit.sql

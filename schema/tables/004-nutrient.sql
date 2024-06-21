@@ -71,6 +71,7 @@ CREATE OR REPLACE FUNCTION insert_ffar_view()
     -- or just dont call first two functions at all and just insert the data.  The add_species_organ_nutrient function 
     -- error out if the species, organ or nutrient does not exist
     -- SELECT * FROM ensure_species_exists(NEW."Genus", NEW."Species", NEW."Common Name");
+    SELECT species_id into sid FROM get_species_id(NEW."Genus", NEW."Species");
 
     -- SELECT * FROM ensure_nutrient(NEW."Nutrient Name", NEW."Nutrient Unit", NEW."Min", NEW."Max");
 
