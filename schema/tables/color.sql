@@ -19,16 +19,3 @@ BEGIN
   RETURN oid;
 END;
 $$ LANGUAGE plpgsql;
-
--- create a view for colors of flower and species (pretty niche use case, but why not)
-oin the species, genus, common_name, and organ tables for the 
--- full species organ view with text names
-CREATE OR REPLACE VIEW flowercolor_view AS
-  SELECT
-    s.name AS species_name,
-    s.species_id AS species_id,
-    cn.name AS common_name_name,
-    cn.common_name_id AS common_name_id,
-  FROM species s 
-  JOIN common_name cn ON cn.species_id = s.species_id
-  JOIN flower_color fc ON so.flowercolor_id = o.flowercolor_id;
