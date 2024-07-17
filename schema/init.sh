@@ -21,7 +21,7 @@ psql -f ./tables/enums/qa_status.sql
 psql -f ./tables/001-species.sql
 psql -f ./tables/002-organ.sql
 psql -f ./tables/003-unit.sql
-psql -f ./tables/004-nutrient.sql
+psql -f ./tables/004-nutrient.sql`
 psql -f ./tables/toxicity.sql
 psql -f ./tables/preparation.sql
 psql -f ./tables/species_organ_nutrient.sql
