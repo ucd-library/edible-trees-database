@@ -11,14 +11,14 @@
 CREATE TABLE IF NOT EXISTS species_organ_nutrient (
   species_organ_nutrient_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   species_id UUID NOT NULL REFERENCES species(species_id),
-  organ_id UUID NOT NULL REFERENCES organ(organ_id),
+  organ_cv_id UUID NOT NULL REFERENCES controlled_vocabulary(controlled_vocabulary_id),
   nutrient_id UUID NOT NULL REFERENCES nutrient(nutrient_id),
-  preparation_id UUID REFERENCES preparation(preparation_id),
-  toxicity UUID REFERENCES toxicity(toxicity_id),
+  preparation_cv_id UUID REFERENCES controlled_vocabulary(controlled_vocabulary_id),
+  toxicity_cv_id UUID REFERENCES controlled_vocabulary(controlled_vocabulary_id),
   source_id UUID NOT NULL REFERENCES source(source_id), -- not sure about the null, because the nutreit can be null, but if it is not null need to make sure it has a source.
-  proxy BOOLEAN NOT NULL,
+  proxy BOOLEAN NOT NULL DEFAULT TRUE,
   proxy_species_id REFERENCES species(species_id), -- not sure if this is the right way to do this. Need to reference another species that MAY be the in data base or may be an outside species...
-  notes_id UUID REFERENCES notes(notes_id),
+  -- notes_id UUID REFERENCES notes(notes_id),
   value INTEGER,
   UNIQUE (species_id, organ_id, nutrient_id)
 );
@@ -26,26 +26,29 @@ CREATE TABLE IF NOT EXISTS species_organ_nutrient (
 CREATE OR REPLACE VIEW species_organ_nutrient_view AS
   SELECT
     g.name AS genus_name,
-    g.genus_id AS genus_id,
     s.name AS species_name,
-    s.species_id AS species_id,
     o.name AS organ_name,
-    o.organ_id AS organ_id,
-    cn.name AS common_name,
-    cn.common_name_id AS common_name_id,
-    n.common_name AS nutrient_name,
-    n.nutrient_id AS nutrient_id,
-    u.name AS unit_name,
-    n.min_bound AS min_bound,
-    n.max_bound AS max_bound,
-    son.value AS value
-  FROM species_organ_nutrient son
+    n.name AS nutrient_name,
+    n.unit AS nutrient_unit,
+    n.min_bound AS nutrient_min_bound, -- JM: Demo, is needed?
+    n.max_bound AS nutrient_max_bound,
+    p.value AS species_preparation,
+    t.value AS species_toxicity,
+    son.value AS value,
+    son.proxy AS is_proxy,
+    sp.species_id AS proxy_species_id,
+    gp.name AS proxy_genus_name,
+    sp.name AS proxy_species_name
+  FROM
+    species_organ_nutrient son
   LEFT JOIN species s ON son.species_id = s.species_id
-  LEFT JOIN common_name cn ON s.species_id = cn.species_id
   LEFT JOIN genus g ON s.genus_id = g.genus_id
-  LEFT JOIN organ o ON son.organ_id = o.organ_id
-  LEFT JOIN nutrient n ON son.nutrient_id = n.nutrient_id
-  LEFT JOIN unit u ON n.unit_id = u.unit_id;
+  LEFT JOIN controlled_vocabulary o ON son.organ_cv_id = o.controlled_vocabulary_id;
+  LEFT JOIN nutrient_view n ON son.nutrient_id = n.nutrient_id;
+  LEFT JOIN controlled_vocabulary p ON son.preparation_cv_id = p.controlled_vocabulary_id;
+  LEFT JOIN controlled_vocabulary t ON son.toxicity_cv_id = t.controlled_vocabulary_id
+  LEFT JOIN son.proxy_species_id ON species sp ON son.proxy_species_id = sp.species_id
+  LEFT JOIN genus gp ON sp.genus_id = gp.genus_id;
 
 
 -- FFAR spreadsheet insert view
@@ -83,11 +86,17 @@ FOR EACH ROW
 EXECUTE FUNCTION insert_ffar_view();
 
 
-CREATE OR REPLACE FUNCTION check_nutrient_min_max_bounds()
+CREATE OR REPLACE FUNCTION species_organ_nutrient_update_checks()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF NEW.min_bound <= NEW.max_bound THEN
-    RAISE EXCEPTION 'min_bound must be less than max_bound';
+ 
+  SELECT check_cv_id_of_type('organ', NEW.organ_cv_id);
+  SELECT check_cv_id_of_type('species_preparation', NEW.preparation_cv_id);
+  SELECT check_cv_id_of_type('species_toxicity', NEW.toxicity_cv_id);
+
+  IF NEW.value < (SELECT min_bound FROM nutrient WHERE nutrient_id = NEW.nutrient_id) OR
+     NEW.value > (SELECT max_bound FROM nutrient WHERE nutrient_id = NEW.nutrient_id) THEN
+    RAISE EXCEPTION 'species_organ_nutrient.value must be within min_bound and max_bound';
   END IF;
   RETURN NEW;
 END;
@@ -108,10 +117,7 @@ END $$;
 CREATE OR REPLACE FUNCTION check_species_nutrient_value()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF NEW.value >= (SELECT min_bound FROM nutrient WHERE nutrient_id = NEW.nutrient_id) OR
-     NEW.value <= (SELECT max_bound FROM nutrient WHERE nutrient_id = NEW.nutrient_id) THEN
-    RAISE EXCEPTION 'species_nutrient.value must be within min_bound and max_bound';
-  END IF;
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;

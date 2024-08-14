@@ -2,20 +2,19 @@ CREATE TABLE IF NOT EXISTS species (
   species_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   source_id UUID REFERENCES pgdm_source NOT NULL,
   genus_id UUID NOT NULL REFERENCES genus(genus_id),
-  name TEXT NOT NULL UNIQUE
+  name TEXT NOT NULL,
+  UNIQUE (genus_id, name)
 );
 
--- join the species, genus, and common_name tables for the full species name view
+-- join the species, genus, tables for the full species name view
 CREATE OR REPLACE VIEW species_view AS
   SELECT
-    g.name AS genus_name,
-    g.genus_id AS genus_id,
-    s.name AS species_name,
     s.species_id AS species_id,
+    g.name AS genus_name,
+    s.name AS species_name,
     ps.name AS source_name
-  FROM common_name cn
-  LEFT JOIN pgdm_source ps ON ps.source_id = cn.source_id
-  LEFT JOIN species s ON cn.species_id = s.species_id
+  FROM species s
+  LEFT JOIN pgdm_source ps ON ps.source_id = s.source_id
   LEFT JOIN genus g ON s.genus_id = g.genus_id;
 
 -- create a function to get the species_id from the species_view
@@ -44,13 +43,13 @@ $$ LANGUAGE plpgsql;
 
 -- create a function to ensure that a species exists in the database
 CREATE OR REPLACE FUNCTION insert_species(
+  species_id UUID,
   genus_name TEXT,
   species_name TEXT,
   source_name TEXT
 ) RETURNS VOID AS $$
 DECLARE
   gid UUID;
-  sid UUID;
   cnid UUID;
   source_id UUID;
 BEGIN
@@ -59,7 +58,7 @@ BEGIN
 
   -- new insert
   IF( species_id IS NULL ) THEN
-    SELECT uuid_generate_v4() INTO sid;
+    SELECT uuid_generate_v4() INTO species_id;
   END IF;
   
   INSERT INTO species 
