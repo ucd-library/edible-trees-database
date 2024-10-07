@@ -3,6 +3,8 @@
 -- TABLE
 CREATE TABLE IF NOT EXISTS usda_zone (
   usda_zone_id TEXT PRIMARY KEY,
+  min_temp_min FLOAT,
+  min_temp_max FLOAT,
   source_id UUID REFERENCES pgdm_source NOT NULL
 );
 CREATE INDEX usda_zone_source_id_idx ON usda_zone(source_id);

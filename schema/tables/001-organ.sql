@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS organ (
 
 -- a relationship table between common_name and organ
 CREATE TABLE IF NOT EXISTS species_organ (
-  species_organ UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  species_organ_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   species_id UUID NOT NULL REFERENCES species(species_id),
   organ_id UUID NOT NULL REFERENCES organ(organ_id)
 );
