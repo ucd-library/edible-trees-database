@@ -10,8 +10,6 @@ INSERT INTO controlled_vocabulary_type (name) VALUES ('shade_tolerance') ON CONF
 INSERT INTO controlled_vocabulary_type (name) VALUES ('fire_resilience') ON CONFLICT DO NOTHING;
 INSERT INTO controlled_vocabulary_type (name) VALUES ('salinity_tolerance') ON CONFLICT DO NOTHING;
 INSERT INTO controlled_vocabulary_type (name) VALUES ('soil_tolerance') ON CONFLICT DO NOTHING;
-INSERT INTO controlled_vocabulary_type (name) VALUES ('unit') ON CONFLICT DO NOTHING;
-INSERT INTO controlled_vocabulary_type (name) VALUES ('organ') ON CONFLICT DO NOTHIN
 INSERT INTO controlled_vocabulary_type (name) VALUES ('species_preparation') ON CONFLICT DO NOTHING;
 INSERT INTO controlled_vocabulary_type (name) VALUES ('species_toxicity') ON CONFLICT DO NOTHING;
 

@@ -1,33 +1,91 @@
 
 CREATE TABLE IF NOT EXISTS organ (
   organ_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  pgdm_source_id UUID REFERENCES pgdm_source NOT NULL,
   name TEXT NOT NULL UNIQUE
 );
 
--- a relationship table between common_name and organ
-CREATE TABLE IF NOT EXISTS species_organ (
-  species_organ_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  species_id UUID NOT NULL REFERENCES species(species_id),
-  organ_id UUID NOT NULL REFERENCES organ(organ_id)
-);
-
--- join the species, genus, common_name, and organ tables for the 
--- full species organ view with text names
-CREATE OR REPLACE VIEW species_organ_view AS
+CREATE OR REPLACE VIEW organ_view AS
   SELECT
-    g.name AS genus_name,
-    g.genus_id AS genus_id,
-    s.name AS species_name,
-    s.species_id AS species_id,
-    cn.name AS common_name_name,
-    cn.common_name_id AS common_name_id,
-    o.name AS organ_name,
-    o.organ_id AS organ_id
-  FROM species s 
-  JOIN common_name cn ON cn.species_id = s.species_id
-  JOIN genus g ON s.genus_id = g.genus_id
-  JOIN species_organ so ON s.species_id = so.species_id
-  JOIN organ o ON so.organ_id = o.organ_id;
+    o.organ_id AS organ_id,
+    o.name as name,
+    sc.name AS source_name
+  FROM
+    organ o
+  LEFT JOIN pgdm_source sc ON o.pgdm_source_id = sc.pgdm_source_id;
+
+CREATE OR REPLACE FUNCTION insert_organ (
+  organ_id UUID,
+  name TEXT,
+  source_name TEXT) RETURNS void AS $$
+DECLARE
+  pgdmid UUID;
+BEGIN
+
+  IF( organ_id IS NULL ) THEN
+    SELECT uuid_generate_v4() INTO organ_id;
+  END IF;
+  SELECT get_source_id(source_name) INTO pgdmid;
+
+  INSERT INTO organ (
+    organ_id, name, pgdm_source_id
+  ) VALUES (
+    organ_id, name, pgdmid
+  );
+
+EXCEPTION WHEN raise_exception THEN
+  RAISE;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION update_organ (
+  organ_id_in UUID,
+  name_in TEXT) RETURNS void AS $$
+DECLARE
+
+BEGIN
+
+  UPDATE organ SET (
+    name 
+  ) = (
+    name_in
+  ) WHERE
+    organ_id = organ_id_in;
+
+EXCEPTION WHEN raise_exception THEN
+  RAISE;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION insert_organ_from_trig() 
+RETURNS TRIGGER AS $$   
+BEGIN
+  PERFORM insert_organ(
+    organ_id := NEW.organ_id,
+    name := NEW.name,
+    source_name := NEW.source_name
+  );
+  RETURN NEW;
+
+EXCEPTION WHEN raise_exception THEN
+  RAISE;
+END; 
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION update_organ_from_trig() 
+RETURNS TRIGGER AS $$   
+BEGIN
+  PERFORM organ_genus(
+    organ_id_in := NEW.organ_id,
+    name_in := NEW.name
+  );
+  RETURN NEW;
+
+EXCEPTION WHEN raise_exception THEN
+  RAISE;
+END; 
+$$ LANGUAGE plpgsql;
+
 
 -- create a function to get the organ_id from the organ table
 CREATE OR REPLACE FUNCTION get_organ_id(organ_name_in TEXT) RETURNS UUID AS $$
@@ -42,18 +100,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- create a function to add a species/organ relationship
-CREATE OR REPLACE FUNCTION add_species_organ(
-  genus_name_in TEXT, 
-  species_name_in TEXT,  
-  organ_name_in TEXT) 
-RETURNS VOID AS $$
-DECLARE
-  sid UUID;
-  oid UUID;
-BEGIN
-  SELECT get_species_id(genus_name_in, species_name_in) INTO sid;
-  SELECT organ_id INTO oid FROM organ WHERE name = organ_name_in;
-  INSERT INTO species_organ (common_name_id, organ_id) VALUES (sid, oid);
-END;
-$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER organ_insert_trig
+  INSTEAD OF INSERT ON
+  organ_view FOR EACH ROW 
+  EXECUTE PROCEDURE insert_organ_from_trig();
+
+CREATE TRIGGER organ_update_trig
+  INSTEAD OF UPDATE ON
+  organ_view FOR EACH ROW 
+  EXECUTE PROCEDURE update_organ_from_trig();

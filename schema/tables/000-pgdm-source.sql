@@ -21,7 +21,7 @@ END $$;
 
 -- TABLE
 CREATE TABLE IF NOT EXISTS pgdm_source (
-  source_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  pgdm_source_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL UNIQUE,
   revision INTEGER NOT NULL,
   table_view text REFERENCES pgdm_tables
@@ -32,7 +32,7 @@ CREATE OR REPLACE FUNCTION get_source_id(source_name text) RETURNS UUID AS $$
 DECLARE
   sid UUID;
 BEGIN
-  select source_id into sid from pgdm_source where name = source_name;
+  select pgdm_source_id into sid from pgdm_source where name = source_name;
 
   if (sid is NULL) then
     RAISE EXCEPTION 'Unknown pgdm source: %', source_name;

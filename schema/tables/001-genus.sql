@@ -1,7 +1,7 @@
 -- TABLE
 CREATE TABLE IF NOT EXISTS genus (
   genus_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  source_id UUID REFERENCES pgdm_source NOT NULL,
+  pgdm_source_id UUID REFERENCES pgdm_source NOT NULL,
   name TEXT NOT NULL UNIQUE
 );
 CREATE INDEX IF NOT EXISTS genus_source_id_idx ON genus(source_id);

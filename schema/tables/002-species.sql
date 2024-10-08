@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS species (
   species_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  source_id UUID REFERENCES pgdm_source NOT NULL,
+  pgdm_source_id UUID REFERENCES pgdm_source NOT NULL,
   genus_id UUID NOT NULL REFERENCES genus(genus_id),
   name TEXT NOT NULL,
   UNIQUE (genus_id, name)
@@ -14,7 +14,7 @@ CREATE OR REPLACE VIEW species_view AS
     s.name AS species_name,
     ps.name AS source_name
   FROM species s
-  LEFT JOIN pgdm_source ps ON ps.source_id = s.source_id
+  LEFT JOIN pgdm_source ps ON ps.pgdm_source_id = s.pgdm_source_id
   LEFT JOIN genus g ON s.genus_id = g.genus_id;
 
 -- create a function to get the species_id from the species_view
@@ -62,7 +62,7 @@ BEGIN
   END IF;
   
   INSERT INTO species 
-    (species_id, genus_id, source_id, name) 
+    (species_id, genus_id, pgdm_source_id, name) 
   VALUES 
     (species_id, gid, source_id, species_name);
 
