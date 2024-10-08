@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS controlled_vocabulary (
 );
 CREATE INDEX controlled_vocabulary_source_id_idx ON controlled_vocabulary(source_id);
 CREATE INDEX controlled_vocabulary_value_idx ON controlled_vocabulary(value);
+CREATE INDEX controlled_vocabulary_type_id_idx ON controlled_vocabulary(controlled_vocabulary_type_id);
 
 -- VIEW
 CREATE OR REPLACE VIEW controlled_vocabulary_view AS

@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS species (
   name TEXT NOT NULL,
   UNIQUE (genus_id, name)
 );
+CREATE INDEX IF NOT EXISTS genus_id_idx ON species(genus_id);
+CREATE INDEX IF NOT EXISTS species_name_idx ON species(name);
 
 -- join the species, genus, tables for the full species name view
 CREATE OR REPLACE VIEW species_view AS

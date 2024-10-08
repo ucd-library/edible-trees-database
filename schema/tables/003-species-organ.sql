@@ -4,6 +4,8 @@ CREATE TABLE IF NOT EXISTS species_organ (
   species_id UUID NOT NULL REFERENCES species(species_id),
   organ_id UUID NOT NULL REFERENCES organ(organ_id)
 );
+CREATE INDEX species_organ_species_id_idx ON species_organ(species_id);
+CREATE INDEX species_organ_organ_id_idx ON species_organ(organ_id);
 
 -- join the species, genus, common_name, and organ tables for the 
 -- full species organ view with text names

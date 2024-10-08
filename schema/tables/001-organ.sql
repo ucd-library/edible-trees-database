@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS organ (
   pgdm_source_id UUID REFERENCES pgdm_source NOT NULL,
   name TEXT NOT NULL UNIQUE
 );
+CREATE INDEX IF NOT EXISTS organ_name_idx ON organ(name);
 
 CREATE OR REPLACE VIEW organ_view AS
   SELECT

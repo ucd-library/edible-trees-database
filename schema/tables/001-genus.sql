@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS genus (
   name TEXT NOT NULL UNIQUE
 );
 CREATE INDEX IF NOT EXISTS genus_source_id_idx ON genus(source_id);
+CREATE INDEX IF NOT EXISTS genus_name_idx ON genus(name);
 
 -- VIEW
 CREATE OR REPLACE VIEW genus_view AS

@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS usda_zone (
   min_temp_max FLOAT,
   source_id UUID REFERENCES pgdm_source NOT NULL
 );
-CREATE INDEX usda_zone_source_id_idx ON usda_zone(source_id);
+-- CREATE INDEX usda_zone_source_id_idx ON usda_zone(source_id);
 
 -- VIEW
 CREATE OR REPLACE VIEW usda_zone_view AS

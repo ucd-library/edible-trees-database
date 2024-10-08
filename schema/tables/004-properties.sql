@@ -12,6 +12,15 @@ CREATE TABLE IF NOT EXISTS property (
   data_source_website_id UUID REFERENCES data_source_website(data_source_website_id),
   accessed DATE NOT NULL
 );
+CREATE INDEX property_source_id_idx ON property(source_id);
+CREATE INDEX property_species_id_idx ON property(species_id);
+CREATE INDEX property_species_organ_id_idx ON property(species_organ_id);
+CREATE INDEX property_controlled_vocabulary_id_idx ON property(controlled_vocabulary_id);
+CREATE INDEX property_measurement_id_idx ON property(measurement_id);
+CREATE INDEX property_usda_zone_id_idx ON property(usda_zone_id);
+CREATE INDEX property_data_source_publication_id_idx ON property(data_source_publication_id);
+CREATE INDEX property_data_source_website_id_idx ON property(data_source_website_id);
+CREATE INDEX property_accessed_idx ON property(accessed);
 
 -- CREATE TABLE IF NOT EXISTS cv_property (
 --   cv_property_id TUUID PRIMARY KEY DEFAULT uuid_generate_v4(),
