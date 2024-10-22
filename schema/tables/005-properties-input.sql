@@ -193,14 +193,17 @@ CREATE OR REPLACE FUNCTION properties_input_insert_trigger()
 RETURNS TRIGGER AS $$
 BEGIN
   PERFORM insert_properties(
+    input_id := NEW.input_id,
     genus_name := NEW.genus_name,
     species_name := NEW.species_name,
     organ_name := NEW.organ_name,
-    usda_zone := NEW.usda_zone,
+    usda_zones := NEW.usda_zones,
+    values := NEW.values,
+    type := NEW.type,
+    unit := NEW.unit,
     data_source := NEW.data_source,
-    cv_values := NEW.cv_values,
-    numeric_value := NEW.numeric_value,
-    TYPE := NEW.TYPE
+    accessed := NEW.accessed,
+    source_name := NEW.source_name
   );
   RETURN NEW;
 END;
@@ -210,7 +213,19 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION properties_input_update_trigger()
 RETURNS TRIGGER AS $$
 BEGIN
-  NEW.updated_at := NOW();
+  PERFORM update_properties(
+    input_id := NEW.input_id,
+    genus_name := NEW.genus_name,
+    species_name := NEW.species_name,
+    organ_name := NEW.organ_name,
+    usda_zones := NEW.usda_zones,
+    values := NEW.values,
+    type := NEW.type,
+    unit := NEW.unit,
+    data_source := NEW.data_source,
+    accessed := NEW.accessed,
+    source_name := NEW.source_name
+  );
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;

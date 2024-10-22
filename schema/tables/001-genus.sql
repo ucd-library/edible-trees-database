@@ -1,10 +1,10 @@
 -- TABLE
 CREATE TABLE IF NOT EXISTS genus (
   genus_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  pgdm_source_id UUID REFERENCES pgdm_source NOT NULL,
+  pgdm_pgdm_source_id UUID REFERENCES pgdm_source NOT NULL,
   name TEXT NOT NULL UNIQUE
 );
-CREATE INDEX IF NOT EXISTS genus_source_id_idx ON genus(source_id);
+CREATE INDEX IF NOT EXISTS genus_pgdm_source_id_idx ON genus(pgdm_source_id);
 CREATE INDEX IF NOT EXISTS genus_name_idx ON genus(name);
 
 -- VIEW
@@ -15,7 +15,7 @@ CREATE OR REPLACE VIEW genus_view AS
     sc.name AS source_name
   FROM
     genus g
-LEFT JOIN pgdm_source sc ON g.source_id = sc.source_id;
+LEFT JOIN pgdm_source sc ON g.pgdm_source_id = sc.pgdm_source_id;
 
 -- FUNCTIONS
 CREATE OR REPLACE FUNCTION insert_genus (
@@ -23,18 +23,18 @@ CREATE OR REPLACE FUNCTION insert_genus (
   name TEXT,
   source_name TEXT) RETURNS void AS $$   
 DECLARE
-  source_id UUID;
+  pgdm_source_id UUID;
 BEGIN
 
   IF( genus_id IS NULL ) THEN
     SELECT uuid_generate_v4() INTO genus_id;
   END IF;
-  SELECT get_source_id(source_name) INTO source_id;
+  SELECT get_source_id(source_name) INTO pgdm_source_id;
 
   INSERT INTO genus (
-    genus_id, name, source_id
+    genus_id, name, pgdm_source_id
   ) VALUES (
-    genus_id, name, source_id
+    genus_id, name, pgdm_source_id
   );
 
 EXCEPTION WHEN raise_exception THEN
