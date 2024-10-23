@@ -33,7 +33,7 @@ BEGIN
   SELECT species_id INTO sid FROM species 
   WHERE 
     genus_id = gid AND 
-    species_name = species_name_in;
+    name = species_name_in;
   
   IF sid IS NULL THEN
     RAISE EXCEPTION 'Species genus=%, species=% does not exist', genus_name_in, species_name_in;

@@ -10,7 +10,9 @@ DO $$
 BEGIN
   INSERT INTO pgdm_tables (table_view, name, uid) VALUES ('genus_view', 'genus', 'genus_id');
   INSERT INTO pgdm_tables (table_view, name, uid) VALUES ('unit_view', 'unit', 'unit_id');
+  INSERT INTO pgdm_tables (table_view, name, uid) VALUES ('organ_view', 'organ', 'organ_id');
   INSERT INTO pgdm_tables (table_view, name, uid) VALUES ('species_view', 'species', 'species_id');
+  INSERT INTO pgdm_tables (table_view, name, uid) VALUES ('species_organ_view', 'species_organ', 'species_organ_id');
   INSERT INTO pgdm_tables (table_view, name, uid) VALUES ('usda_zone_view', 'usda_zone', 'usda_zone_id');
   INSERT INTO pgdm_tables (table_view, name, uid) VALUES ('data_source_publication', 'data_source_publication', 'data_source_publication_id');
   INSERT INTO pgdm_tables (table_view, name, uid) VALUES ('data_source_website', 'data_source_website', 'data_source_website_id');
