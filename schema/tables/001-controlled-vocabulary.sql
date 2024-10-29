@@ -1,7 +1,7 @@
 -- TABLES
 CREATE TABLE IF NOT EXISTS controlled_vocabulary_type (
   controlled_vocabulary_type_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL UNIQUE
 );
 CREATE INDEX controlled_vocabulary_type_name_idx ON controlled_vocabulary_type(name);
 
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS controlled_vocabulary (
   controlled_vocabulary_type_id UUID REFERENCES controlled_vocabulary_type(controlled_vocabulary_type_id) NOT NULL,
   value TEXT NOT NULL,
   source_id UUID REFERENCES pgdm_source NOT NULL,
-  UNIQUE(type_id, value)
+  UNIQUE(controlled_vocabulary_type_id, value)
 );
 CREATE INDEX controlled_vocabulary_source_id_idx ON controlled_vocabulary(source_id);
 CREATE INDEX controlled_vocabulary_value_idx ON controlled_vocabulary(value);
@@ -32,9 +32,9 @@ CREATE OR REPLACE VIEW controlled_vocabulary_view AS
     c.value as value,
     sc.name AS source_name
   FROM
-    controlled_vocabulary c,
+    controlled_vocabulary c
   LEFT JOIN controlled_vocabulary_type ct ON c.controlled_vocabulary_type_id = ct.controlled_vocabulary_type_id
-  LEFT JOIN pgdm_source sc ON c.source_id = sc.source_id
+  LEFT JOIN pgdm_source sc ON c.source_id = sc.source_id;
 
 -- FUNCTION GETTERs
 CREATE OR REPLACE FUNCTION get_controlled_vocabulary_type(type_in TEXT) RETURNS UUID AS $$
