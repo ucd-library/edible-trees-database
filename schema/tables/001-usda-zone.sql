@@ -5,9 +5,9 @@ CREATE TABLE IF NOT EXISTS usda_zone (
   usda_zone_id TEXT PRIMARY KEY,
   min_temp_min FLOAT,
   min_temp_max FLOAT,
-  source_id UUID REFERENCES pgdm_source NOT NULL
+  pgdm_source_id UUID REFERENCES pgdm_source NOT NULL
 );
--- CREATE INDEX usda_zone_source_id_idx ON usda_zone(source_id);
+CREATE INDEX usda_zone_source_id_idx ON usda_zone(pgdm_source);
 
 -- VIEW
 CREATE OR REPLACE VIEW usda_zone_view AS
@@ -16,22 +16,22 @@ CREATE OR REPLACE VIEW usda_zone_view AS
     sc.name AS source_name
   FROM
     usda_zone u
-LEFT JOIN pgdm_source sc ON u.source_id = sc.source_id;
+LEFT JOIN pgdm_source sc ON u.pgdm_source_id = sc.pgdm_source_id;
 
 -- FUNCTIONS
 CREATE OR REPLACE FUNCTION insert_usda_zone (
   usda_zone_id TEXT,
   source_name TEXT) RETURNS void AS $$   
 DECLARE
-  source_id UUID;
+  sid UUID;
 BEGIN
 
-  SELECT get_source_id(source_name) INTO source_id;
+  SELECT get_source_id(source_name) INTO sid;
 
   INSERT INTO usda_zone (
-    usda_zone_id, source_id
+    usda_zone_id, pgdm_source_id
   ) VALUES (
-    usda_zone_id, source_id
+    usda_zone_id, sid
   );
 
 EXCEPTION WHEN raise_exception THEN

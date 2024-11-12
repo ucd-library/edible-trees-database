@@ -55,7 +55,7 @@ DECLARE
 BEGIN
 
   UPDATE tag_type SET (
-    name, description, 
+    name, description 
   ) = (
     name_in, description_in
   ) WHERE

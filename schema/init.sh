@@ -8,7 +8,7 @@ set -e
 ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd $ROOT_DIR
 
-SCHEMA=edible_trees;
+export SCHEMA=edible_trees;
 export PGHOST=localhost;
 # export PGUSER=postgres
 PSQL="psql -U postgres"
@@ -27,6 +27,15 @@ $PSQL -f ./tables/000-pgdm-source.sql
 $PSQL -f ./tables/001-controlled-vocabulary.sql
 $PSQL -f ./tables/001-genus.sql
 $PSQL -f ./tables/001-organ.sql
+$PSQL -f ./tables/001-tag-type.sql
 $PSQL -f ./tables/001-unit.sql
 $PSQL -f ./tables/001-usda-zone.sql
 $PSQL -f ./tables/002-species.sql
+$PSQL -f ./tables/003-common-name.sql
+$PSQL -f ./tables/003-data-source.sql
+$PSQL -f ./tables/003-measurement.sql
+$PSQL -f ./tables/003-species-organ.sql
+$PSQL -f ./tables/004-controlled-vocabulary-property.sql
+$PSQL -f ./tables/004-measurement-property.sql
+$PSQL -f ./tables/004-property-input.sql
+$PSQL -f ./tables/004-tag-property.sql

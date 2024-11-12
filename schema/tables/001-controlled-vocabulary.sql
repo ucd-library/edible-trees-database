@@ -17,10 +17,10 @@ CREATE TABLE IF NOT EXISTS controlled_vocabulary (
   controlled_vocabulary_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   controlled_vocabulary_type_id UUID REFERENCES controlled_vocabulary_type(controlled_vocabulary_type_id) NOT NULL,
   value TEXT NOT NULL,
-  source_id UUID REFERENCES pgdm_source NOT NULL,
+  pgdm_source_id UUID REFERENCES pgdm_source NOT NULL,
   UNIQUE(controlled_vocabulary_type_id, value)
 );
-CREATE INDEX controlled_vocabulary_source_id_idx ON controlled_vocabulary(source_id);
+CREATE INDEX controlled_vocabulary_source_id_idx ON controlled_vocabulary(pgdm_source_id);
 CREATE INDEX controlled_vocabulary_value_idx ON controlled_vocabulary(value);
 CREATE INDEX controlled_vocabulary_type_id_idx ON controlled_vocabulary(controlled_vocabulary_type_id);
 
@@ -34,7 +34,7 @@ CREATE OR REPLACE VIEW controlled_vocabulary_view AS
   FROM
     controlled_vocabulary c
   LEFT JOIN controlled_vocabulary_type ct ON c.controlled_vocabulary_type_id = ct.controlled_vocabulary_type_id
-  LEFT JOIN pgdm_source sc ON c.source_id = sc.source_id;
+  LEFT JOIN pgdm_source sc ON c.pgdm_source_id = sc.pgdm_source_id;
 
 -- FUNCTION GETTERs
 CREATE OR REPLACE FUNCTION get_controlled_vocabulary_type(type_in TEXT) RETURNS UUID AS $$
@@ -83,6 +83,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION check_cv_id_of_type(type_in TEXT, controlled_vocabulary_id_in UUID) RETURNS UUID AS $$
 DECLARE
   v TEXT;
+  cvtid UUID;
 BEGIN
   
     SELECT get_controlled_vocabulary_type(type_in) INTO cvtid;
@@ -111,7 +112,7 @@ CREATE OR REPLACE FUNCTION insert_controlled_vocabulary (
   value TEXT,
   source_name TEXT) RETURNS void AS $$   
 DECLARE
-  source_id UUID;
+  sid UUID;
   cvtid UUID;
 BEGIN
 
@@ -120,12 +121,12 @@ BEGIN
   IF( controlled_vocabulary_id IS NULL ) THEN
     SELECT uuid_generate_v4() INTO controlled_vocabulary_id;
   END IF;
-  SELECT get_source_id(source_name) INTO source_id;
+  SELECT get_source_id(source_name) INTO sid;
 
   INSERT INTO controlled_vocabulary (
-    controlled_vocabulary_id, controlled_vocabulary_type_id, value, source_id
+    controlled_vocabulary_id, controlled_vocabulary_type_id, value, pgdm_source_id
   ) VALUES (
-    controlled_vocabulary_id, cvtid, value, source_id
+    controlled_vocabulary_id, cvtid, value, sid
   );
 
 EXCEPTION WHEN raise_exception THEN
@@ -144,7 +145,7 @@ BEGIN
   SELECT get_controlled_vocabulary_type(type_in) INTO cvtid;
 
   UPDATE controlled_vocabulary SET (
-    type, value, 
+    type, value 
   ) = (
     type_in, value_in
   ) WHERE

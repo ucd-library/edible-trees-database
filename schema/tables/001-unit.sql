@@ -50,7 +50,7 @@ DECLARE
 BEGIN
 
   UPDATE unit SET (
-    name, 
+    name 
   ) = (
     name_in
   ) WHERE

@@ -18,7 +18,7 @@ CREATE OR REPLACE VIEW measurement_view AS
   FROM
     measurement m
   LEFT JOIN unit u ON m.unit_id = u.unit_id
-  LEFT JOIN pgdm_source sc ON m.source_id = sc.source_id;
+  LEFT JOIN pgdm_source sc ON m.pgdm_source_id = sc.pgdm_source_id;
 
 -- FUNCTIONS
 CREATE OR REPLACE FUNCTION insert_measurement (
@@ -27,20 +27,20 @@ CREATE OR REPLACE FUNCTION insert_measurement (
   unit TEXT,
   source_name TEXT) RETURNS void AS $$   
 DECLARE
-  source_id UUID;
+  sid UUID;
   uid UUID;
 BEGIN
 
   IF( measurement_id IS NULL ) THEN
     SELECT uuid_generate_v4() INTO measurement_id;
   END IF;
-  SELECT get_source_id(source_name) INTO source_id;
+  SELECT get_source_id(source_name) INTO sid;
   SELECT get_unit_id(unit) INTO uid;
 
   INSERT INTO measurement (
-    measurement_id, name, unit_id, source_id
+    measurement_id, name, unit_id, pgdm_source_id
   ) VALUES (
-    measurement_id, name, uid, source_id
+    measurement_id, name, uid, sid
   );
 
 EXCEPTION WHEN raise_exception THEN

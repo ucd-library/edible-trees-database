@@ -4,7 +4,6 @@ CREATE TABLE IF NOT EXISTS properties_input (
   genus_name TEXT NOT NULL,
   species_name TEXT NOT NULL,
   organ_name TEXT,
-  organ_part_name TEXT,
   usda_zone TEXT NOT NULL,
   values TEXT NOT NULL,
   type TEXT NOT NULL,
@@ -21,17 +20,18 @@ CREATE OR REPLACE FUNCTION insert_properties(
   genus_name TEXT,
   species_name TEXT,
   organ_name TEXT,
-  organ_part_name TEXT,
   usda_zones TEXT,
-  values TEXT,
+  "values" TEXT,
   type TEXT,
-  precision FLOAT,
+  "precision" FLOAT,
   uncertainty FLOAT,
   unit TEXT,
   data_source TEXT,
   accessed DATE
 ) RETURNS VOID AS $$
 DECLARE
+  zone TEXT;
+  value TEXT;
 BEGIN
   IF property_input_id IS NOT NULL THEN
     SELECT uuid_generate_v4() INTO property_input_id;
@@ -44,12 +44,11 @@ BEGIN
         genus_name := genus_name,
         species_name := species_name,
         organ_name := organ_name,
-        organ_part_name := organ_part_name,
         usda_zone := zone,
         value := value,
         type := type,
         unit := unit,
-        precision := precision,
+        "precision" := precision,
         uncertainty := uncertainty,
         data_source := data_source,
         accessed := accessed,
@@ -68,12 +67,11 @@ CREATE OR REPLACE FUNCTION update_properties(
   genus_name TEXT,
   species_name TEXT,
   organ_name TEXT,
-  organ_part_name TEXT,
   usda_zones TEXT,
-  values TEXT,
+  "values" TEXT,
   type TEXT,
   unit TEXT,
-  precision FLOAT,
+  "precision" FLOAT,
   uncertainty FLOAT,
   data_source TEXT,
   accessed DATE
@@ -86,12 +84,11 @@ BEGIN
     genus_name := genus_name,
     species_name := species_name,
     organ_name := organ_name,
-    organ_part_name := organ_part_name,
     usda_zones := usda_zones,
-    values := values,
+    "values" := values,
     type := type,
     unit := unit,
-    precision := precision,
+    "precision" := precision,
     uncertainty := uncertainty,
     data_source := data_source,
     accessed := accessed
@@ -105,7 +102,6 @@ CREATE OR REPLACE FUNCTION insert_property(
   genus_name TEXT,
   species_name TEXT,
   organ_name TEXT,
-  organ_part_name TEXT,
   usda_zone TEXT,
   value TEXT,
   type TEXT,
@@ -130,7 +126,7 @@ BEGIN
   SELECT get_source_id(pgdm_source_name) INTO pgdm_source_id;
 
   IF organ_name IS NOT NULL THEN
-    SELECT get_species_organ_id(genus_name, species_name, organ_name, organ_part_name) INTO soid;
+    SELECT get_species_organ_id(genus_name, species_name, organ_name) INTO soid;
   ELSE
     SELECT get_species_id(genus_name, species_name) INTO sid;
   END IF;
@@ -150,11 +146,11 @@ BEGIN
   END IF;
 
   IF is_pub IS NOT NULL THEN
-    SELECT get_publication_data_source_id(data_source) INTO pdsid;
-  ELSE IF is_web IS NOT NULL THEN
-    SELECT get_website_data_source_id(data_source) INTO wdsid;
+    SELECT get_publication_id(data_source) INTO pdsid;
+  ELSIF is_web IS NOT NULL THEN
+    SELECT get_website_id(data_source) INTO wdsid;
   ELSE
-    RAISE EXCEPTION 'Unknown data source: %. Could not find in data_source_publication or data_source_website', data_source;
+    RAISE EXCEPTION 'Unknown data source: %. Could not find in publication or website tables', data_source;
   END IF;
 
   SELECT EXISTS (
@@ -187,8 +183,8 @@ BEGIN
     VALUES
       (pgdm_source_id, property_input_id, sid, soid, 
       get_controlled_vocabulary_id(type, value), usda_zone, pdsid, wdsid);
-  ELSE IF is_num THEN
-    SELECT  INTO vid;
+  ELSIF is_num THEN
+    -- SELECT  INTO vid;
 
     INSERT INTO controlled_vocabulary_property
       (pgdm_source_id, property_input_id, species_id, species_organ_id, 
@@ -197,7 +193,7 @@ BEGIN
       (pgdm_source_id, property_input_id, sid, soid, 
       get_measurement_id(type, unit), value, usda_zone, pdsid, wdsid);
 
-  ELSE IF is_tag THEN
+  ELSIF is_tag THEN
 
     INSERT INTO tag_property
       (pgdm_source_id, property_input_id, species_id, species_organ_id, 
@@ -210,8 +206,6 @@ BEGIN
     RAISE EXCEPTION 'Unknown type: %. The "type" column needs to be a known controlled vocabulary type or measurement, or tag type', type;
   END IF;
 
-EXCEPTION WHEN raise_exception THEN
-  RAISE;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -225,7 +219,7 @@ BEGIN
     species_name := NEW.species_name,
     organ_name := NEW.organ_name,
     usda_zones := NEW.usda_zones,
-    values := NEW.values,
+    "values" := NEW.values,
     type := NEW.type,
     unit := NEW.unit,
     data_source := NEW.data_source,
@@ -233,7 +227,10 @@ BEGIN
     pgdm_source_name := NEW.pgdm_source_name
   );
   RETURN NEW;
-END;
+
+EXCEPTION WHEN raise_exception THEN
+  RAISE;
+END; 
 $$ LANGUAGE plpgsql;
 
 -- Trigger function for update
@@ -246,7 +243,7 @@ BEGIN
     species_name := NEW.species_name,
     organ_name := NEW.organ_name,
     usda_zones := NEW.usda_zones,
-    values := NEW.values,
+    "values" := NEW.values,
     type := NEW.type,
     unit := NEW.unit,
     data_source := NEW.data_source,
@@ -254,12 +251,15 @@ BEGIN
     pgdm_source_name := NEW.pgdm_source_name
   );
   RETURN NEW;
-END;
+
+EXCEPTION WHEN raise_exception THEN
+  RAISE;
+END; 
 $$ LANGUAGE plpgsql;
 
 -- Create insert trigger
 CREATE TRIGGER before_insert_properties_input
-INSTEAD INSERT ON properties_input
+INSTEAD OF INSERT ON properties_input
 FOR EACH ROW
 EXECUTE FUNCTION properties_input_insert_trigger();
 
