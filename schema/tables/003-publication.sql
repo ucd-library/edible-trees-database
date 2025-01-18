@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS publication (
   publication_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   pgdm_source_id UUID REFERENCES pgdm_source NOT NULL,
   doi TEXT NOT NULL UNIQUE,
-  author TEXT NOT NULL,
+  author TEXT,
   title TEXT NOT NULL,
   journal TEXT,
   year INTEGER,
@@ -146,7 +146,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- FUNCTION GETTER
-CREATE OR REPLACE FUNCTION get_publication_id(doi TEXT) RETURNS UUID AS $$   
+CREATE OR REPLACE FUNCTION get_publication_id(doi_in TEXT) RETURNS UUID AS $$   
 DECLARE
   pid UUID;
 BEGIN
@@ -156,10 +156,10 @@ BEGIN
   FROM 
     publication p 
   WHERE  
-    p.doi = doi;
+    p.doi = doi_in;
 
   IF (pid IS NULL) THEN
-    RAISE EXCEPTION 'Unknown publication: %', doi;
+    RAISE EXCEPTION 'Unknown publication: %', doi_in;
   END IF;
   
   RETURN pid;

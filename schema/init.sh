@@ -17,7 +17,7 @@ PSQL="psql -U postgres"
 
 $PSQL -c "CREATE SCHEMA IF NOT EXISTS $SCHEMA;"
 $PSQL -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";"
-export PGOPTIONS=--search_path=$SCHEMA,public
+export PGOPTIONS="--search_path=$SCHEMA,public"
 
 # types
 # psql -f ./tables/enums/qa_status.sql
@@ -32,9 +32,10 @@ $PSQL -f ./tables/001-unit.sql
 $PSQL -f ./tables/001-usda-zone.sql
 $PSQL -f ./tables/002-species.sql
 $PSQL -f ./tables/003-common-name.sql
-$PSQL -f ./tables/003-data-source.sql
 $PSQL -f ./tables/003-measurement.sql
 $PSQL -f ./tables/003-species-organ.sql
+$PSQL -f ./tables/003-publication.sql
+$PSQL -f ./tables/003-website.sql
 $PSQL -f ./tables/004-controlled-vocabulary-property.sql
 $PSQL -f ./tables/004-measurement-property.sql
 $PSQL -f ./tables/004-property-input.sql

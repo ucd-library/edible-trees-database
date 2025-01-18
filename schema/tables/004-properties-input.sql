@@ -1,6 +1,7 @@
 
 CREATE TABLE IF NOT EXISTS properties_input (
   property_input_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  source_name TEXT REFERENCES pgdm_source(name) NOT NULL,
   genus_name TEXT NOT NULL,
   species_name TEXT NOT NULL,
   organ_name TEXT,
@@ -11,7 +12,8 @@ CREATE TABLE IF NOT EXISTS properties_input (
   precision FLOAT,
   uncertainty FLOAT,
   data_source TEXT NOT NULL,
-  accessed DATE NOT NULL
+  accessed DATE NOT NULL,
+  comments TEXT
 );
 
 CREATE OR REPLACE FUNCTION insert_properties(
@@ -20,7 +22,7 @@ CREATE OR REPLACE FUNCTION insert_properties(
   genus_name TEXT,
   species_name TEXT,
   organ_name TEXT,
-  usda_zones TEXT,
+  usda_zone TEXT,
   "values" TEXT,
   type TEXT,
   "precision" FLOAT,
@@ -38,7 +40,7 @@ BEGIN
   END IF;
 
   FOR value IN SELECT unnest(string_to_array(values, ',')) AS value LOOP
-    FOR zone IN SELECT unnest(string_to_array(zones, ',')) AS zone LOOP
+    FOR zone IN SELECT unnest(string_to_array(usda_zone, ',')) AS zone LOOP
       SELECT insert_property(
         property_input_id := property_input_id,
         genus_name := genus_name,
@@ -67,7 +69,7 @@ CREATE OR REPLACE FUNCTION update_properties(
   genus_name TEXT,
   species_name TEXT,
   organ_name TEXT,
-  usda_zones TEXT,
+  usda_zone TEXT,
   "values" TEXT,
   type TEXT,
   unit TEXT,
@@ -84,7 +86,7 @@ BEGIN
     genus_name := genus_name,
     species_name := species_name,
     organ_name := organ_name,
-    usda_zones := usda_zones,
+    usda_zone := usda_zone,
     "values" := values,
     type := type,
     unit := unit,
@@ -98,7 +100,7 @@ $$ LANGUAGE plpgsql;
 
 
 CREATE OR REPLACE FUNCTION insert_property(
-  input_id UUID,
+  property_input_id UUID,
   genus_name TEXT,
   species_name TEXT,
   organ_name TEXT,
@@ -106,6 +108,8 @@ CREATE OR REPLACE FUNCTION insert_property(
   value TEXT,
   type TEXT,
   unit TEXT,
+  "precision" FLOAT,
+  uncertainty FLOAT,
   data_source TEXT,
   accessed DATE,
   pgdm_source_name TEXT
@@ -133,21 +137,21 @@ BEGIN
 
   SELECT EXISTS (
     SELECT 1 
-    FROM data_source_publication 
-    WHERE id = data_source 
+    FROM publication p 
+    WHERE p.doi = data_source 
   ) INTO is_pub;
 
   IF is_pub IS NULL THEN
     SELECT EXISTS (
       SELECT 1 
-      FROM data_source_website 
-      WHERE id = data_source
+      FROM website w
+      WHERE w.url = data_source
     ) INTO is_web;
   END IF;
 
-  IF is_pub IS NOT NULL THEN
+  IF is_pub THEN
     SELECT get_publication_id(data_source) INTO pdsid;
-  ELSIF is_web IS NOT NULL THEN
+  ELSIF is_web THEN
     SELECT get_website_id(data_source) INTO wdsid;
   ELSE
     RAISE EXCEPTION 'Unknown data source: %. Could not find in publication or website tables', data_source;
@@ -214,17 +218,19 @@ CREATE OR REPLACE FUNCTION properties_input_insert_trigger()
 RETURNS TRIGGER AS $$
 BEGIN
   PERFORM insert_properties(
-    input_id := NEW.input_id,
+    property_input_id := NEW.property_input_id,
     genus_name := NEW.genus_name,
     species_name := NEW.species_name,
     organ_name := NEW.organ_name,
-    usda_zones := NEW.usda_zones,
+    usda_zone := NEW.usda_zone,
     "values" := NEW.values,
     type := NEW.type,
+    "precision" := NEW.precision,
+    uncertainty := NEW.uncertainty,
     unit := NEW.unit,
     data_source := NEW.data_source,
     accessed := NEW.accessed,
-    pgdm_source_name := NEW.pgdm_source_name
+    pgdm_source_name := NEW.source_name
   );
   RETURN NEW;
 
@@ -238,17 +244,19 @@ CREATE OR REPLACE FUNCTION properties_input_update_trigger()
 RETURNS TRIGGER AS $$
 BEGIN
   PERFORM update_properties(
-    input_id := NEW.input_id,
+    property_input_id := NEW.property_input_id,
     genus_name := NEW.genus_name,
     species_name := NEW.species_name,
     organ_name := NEW.organ_name,
-    usda_zones := NEW.usda_zones,
+    usda_zone := NEW.usda_zone,
     "values" := NEW.values,
     type := NEW.type,
+    "precision" := NEW.precision,
+    uncertainty := NEW.uncertainty,
     unit := NEW.unit,
     data_source := NEW.data_source,
     accessed := NEW.accessed,
-    pgdm_source_name := NEW.pgdm_source_name
+    pgdm_source_name := NEW.source_name
   );
   RETURN NEW;
 
@@ -259,7 +267,7 @@ $$ LANGUAGE plpgsql;
 
 -- Create insert trigger
 CREATE TRIGGER before_insert_properties_input
-INSTEAD OF INSERT ON properties_input
+BEFORE INSERT ON properties_input
 FOR EACH ROW
 EXECUTE FUNCTION properties_input_insert_trigger();
 
