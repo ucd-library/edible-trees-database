@@ -41,3 +41,19 @@ CREATE OR REPLACE VIEW controlled_vocabulary_property_view AS
   LEFT JOIN organ o ON so.organ_id = o.organ_id
   LEFT JOIN publication p ON cvp.publication_id = p.publication_id
   LEFT JOIN website w ON cvp.website_id = w.website_id;
+
+CREATE OR REPLACE VIEW cv_property_by_zone AS
+  SELECT
+    g.name AS genus_name,
+    s.name AS species_name,
+    o.name AS organ_name,
+    cv.type AS property,
+    array_agg(DISTINCT cv.value) AS value,
+    cvp.usda_zone_id AS usda_zone_id
+  FROM controlled_vocabulary_property cvp
+  LEFT JOIN controlled_vocabulary_view cv ON cvp.controlled_vocabulary_id = cv.controlled_vocabulary_id
+  LEFT JOIN species s ON cvp.species_id = s.species_id
+  LEFT JOIN genus g ON s.genus_id = g.genus_id
+  LEFT JOIN species_organ so ON cvp.species_organ_id = so.species_organ_id
+  LEFT JOIN organ o ON so.organ_id = o.organ_id
+  GROUP BY g.name, s.name, o.name, cv.type, cvp.usda_zone_id;

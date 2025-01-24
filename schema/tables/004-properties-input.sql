@@ -129,10 +129,9 @@ DECLARE
 BEGIN
   SELECT get_source_id(pgdm_source_name) INTO pgdm_source_id;
 
+  SELECT get_species_id(genus_name, species_name) INTO sid;
   IF organ_name IS NOT NULL THEN
     SELECT get_species_organ_id(genus_name, species_name, organ_name) INTO soid;
-  ELSE
-    SELECT get_species_id(genus_name, species_name) INTO sid;
   END IF;
 
   SELECT EXISTS (
@@ -279,10 +278,8 @@ EXECUTE FUNCTION properties_input_update_trigger();
 -- trigger check for *_property tables
 CREATE OR REPLACE FUNCTION check_property_values() RETURNS TRIGGER AS $$
 BEGIN
-  IF (NEW.species_organ_id IS NULL AND NEW.species_id IS NULL) OR 
-     (NEW.species_organ_id IS NULL AND NEW.species_id IS NOT NULL) OR 
-     (NEW.species_organ_id IS NOT NULL AND NEW.species_id IS NULL) THEN
-    RAISE EXCEPTION 'Either species_organ or species must be specified, but not both';
+  IF (NEW.species_organ_id IS NOT NULL AND NEW.species_id IS NULL) THEN
+    RAISE EXCEPTION 'If species_organ is specified, species must be specified';
   END IF;
 
   IF (NEW.data_source_publication_id IS NULL AND NEW.data_source_website_id IS NULL) OR
