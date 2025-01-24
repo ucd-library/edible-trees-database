@@ -110,7 +110,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- FUNCTION GETTER
-CREATE OR REPLACE FUNCTION get_website_id(url TEXT) RETURNS UUID AS $$   
+CREATE OR REPLACE FUNCTION get_website_id(url_in TEXT) RETURNS UUID AS $$   
 DECLARE
   wid UUID;
 BEGIN
@@ -120,10 +120,10 @@ BEGIN
   FROM 
     website w 
   WHERE 
-    w.url = url;
+    w.url = url_in;
 
   IF (wid IS NULL) THEN
-    RAISE EXCEPTION 'Unknown website: %', url;
+    RAISE EXCEPTION 'Unknown website: %', url_in;
   END IF;
   
   RETURN wid;

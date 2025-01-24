@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS measurement_property (
   measurement_measurement_property_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   pgdm_source_id UUID REFERENCES pgdm_source NOT NULL,
-  measurement_property_input_id UUID NOT NULL,
+  property_input_id UUID NOT NULL,
   species_id UUID REFERENCES species(species_id),
   species_organ_id UUID REFERENCES species_organ(species_organ_id),
   measurement_id UUID REFERENCES measurement(measurement_id),

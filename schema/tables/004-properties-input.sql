@@ -41,7 +41,7 @@ BEGIN
 
   FOR value IN SELECT unnest(string_to_array(values, ',')) AS value LOOP
     FOR zone IN SELECT unnest(string_to_array(usda_zone, ',')) AS zone LOOP
-      SELECT insert_property(
+      PERFORM insert_property(
         property_input_id := property_input_id,
         genus_name := genus_name,
         species_name := species_name,
@@ -136,14 +136,14 @@ BEGIN
   END IF;
 
   SELECT EXISTS (
-    SELECT 1 
+    SELECT true 
     FROM publication p 
     WHERE p.doi = data_source 
   ) INTO is_pub;
 
-  IF is_pub IS NULL THEN
+  IF NOT is_pub THEN
     SELECT EXISTS (
-      SELECT 1 
+      SELECT true 
       FROM website w
       WHERE w.url = data_source
     ) INTO is_web;
@@ -158,56 +158,55 @@ BEGIN
   END IF;
 
   SELECT EXISTS (
-    SELECT 1 
+    SELECT true 
     FROM controlled_vocabulary_type 
     WHERE name = type
   ) INTO is_cv;
 
-  IF is_cv IS NULL THEN
+  IF NOT is_cv THEN
     SELECT EXISTS (
-      SELECT 1 
+      SELECT true 
       FROM measurement 
       WHERE name = type
     ) INTO is_num;
   END IF;
 
-  IF is_cv IS NULL AND is_num IS NULL THEN
+  IF NOT is_cv AND NOT is_num THEN
     SELECT EXISTS (
-      SELECT 1 
+      SELECT true 
       FROM tag_type
       WHERE name = type
     ) INTO is_tag;  
   END IF;
 
   IF is_cv THEN
-
-    INSERT INTO measurement_property
-      (pgdm_source_id, property_input_id, species_id, species_organ_id, 
-      controlled_vocabulary_id, usda_zone_id, data_source_publication_id, data_source_website_id) 
-    VALUES
-      (pgdm_source_id, property_input_id, sid, soid, 
-      get_controlled_vocabulary_id(type, value), usda_zone, pdsid, wdsid);
-  ELSIF is_num THEN
-    -- SELECT  INTO vid;
-
+    SELECT get_controlled_vocabulary_id(type, value) INTO vid;
     INSERT INTO controlled_vocabulary_property
       (pgdm_source_id, property_input_id, species_id, species_organ_id, 
-      measurement_id, measurement_value, usda_zone_id, data_source_publication_id, data_source_website_id) 
+      controlled_vocabulary_id, usda_zone_id, publication_id, website_id, accessed) 
     VALUES
       (pgdm_source_id, property_input_id, sid, soid, 
-      get_measurement_id(type, unit), value, usda_zone, pdsid, wdsid);
+      vid, usda_zone, pdsid, wdsid, accessed);
+  ELSIF is_num THEN
+    SELECT get_measurement_id(type, unit) INTO vid;
+    INSERT INTO measurement_property
+      (pgdm_source_id, property_input_id, species_id, species_organ_id, 
+      measurement_id, measurement_value, usda_zone_id, publication_id, website_id, accessed) 
+    VALUES
+      (pgdm_source_id, property_input_id, sid, soid, 
+      vid, value::double precision, usda_zone, pdsid, wdsid, accessed);
 
   ELSIF is_tag THEN
-
+    SELECT get_tag_type_id(type, value) INTO vid;
     INSERT INTO tag_property
       (pgdm_source_id, property_input_id, species_id, species_organ_id, 
-      tag_type_id, tag_value, usda_zone_id, data_source_publication_id, data_source_website_id) 
+      tag_type_id, tag_value, usda_zone_id, publication_id, website_id, accessed) 
     VALUES
       (pgdm_source_id, property_input_id, sid, soid, 
-      get_tag_type_id(type), value, usda_zone, pdsid, wdsid);
+      vid, value, usda_zone, pdsid, wdsid, accessed);
 
   ELSE
-    RAISE EXCEPTION 'Unknown type: %. The "type" column needs to be a known controlled vocabulary type or measurement, or tag type', type;
+    RAISE EXCEPTION 'Unknown type: %. The "type" column needs to be a known controlled vocabulary, measurement, or tag type', type;
   END IF;
 
 END;

@@ -29,6 +29,7 @@ INSERT INTO controlled_vocabulary_type (name) VALUES ('preparation') ON CONFLICT
 INSERT INTO controlled_vocabulary_type (name) VALUES ('salinity_tolerance') ON CONFLICT DO NOTHING;
 INSERT INTO controlled_vocabulary_type (name) VALUES ('shade_tolerance') ON CONFLICT DO NOTHING;
 INSERT INTO controlled_vocabulary_type (name) VALUES ('soil_tolerance') ON CONFLICT DO NOTHING;
+INSERT INTO controlled_vocabulary_type (name) VALUES ('leaf_retention') ON CONFLICT DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS controlled_vocabulary (
   controlled_vocabulary_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

@@ -103,24 +103,24 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- FUNCTION GETTER
-CREATE OR REPLACE FUNCTION get_measurement_id(name text, unit text) RETURNS UUID AS $$   
+CREATE OR REPLACE FUNCTION get_measurement_id(name_in text, unit_in text) RETURNS UUID AS $$   
 DECLARE
   mid UUID;
   uid UUID;
 BEGIN
 
-  select get_unit_id(unit) INTO uid;
+  select get_unit_id(unit_in) INTO uid;
 
   SELECT 
     measurement_id INTO mid 
   FROM 
     measurement m 
   WHERE
-    m.name = name AND 
+    m.name = name_in AND 
     m.unit_id = uid;
 
   IF (mid IS NULL) THEN
-    RAISE EXCEPTION 'Unknown measurement: name=% unit=%', name, unit;
+    RAISE EXCEPTION 'Unknown measurement: name=% unit=%', name_in, unit_in;
   END IF;
   
   RETURN mid;

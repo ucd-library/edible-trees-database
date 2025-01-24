@@ -19,6 +19,25 @@ CREATE INDEX property_publication_id_idx ON controlled_vocabulary_property(publi
 CREATE INDEX property_website_id_idx ON controlled_vocabulary_property(website_id);
 CREATE INDEX property_accessed_idx ON controlled_vocabulary_property(accessed);
 
--- CREATE TRIGGER check_controlled_vocabulary_values_trigger
--- BEFORE INSERT OR UPDATE ON controlled_vocabulary_property
--- FOR EACH ROW EXECUTE FUNCTION check_property_values();
+CREATE OR REPLACE VIEW controlled_vocabulary_property_view AS
+  SELECT
+    cvp.property_id AS property_id,
+    g.name AS genus_name,
+    s.name AS species_name,
+    o.name AS organ_name,
+    cv.type AS property,
+    cv.value AS value,
+    cvp.usda_zone_id AS usda_zone_id,
+    p.publication_id AS publication_id,
+    p.title AS publication_title,
+    w.website_id AS website_id,
+    w.url AS website_url,
+    cvp.accessed AS accessed
+  FROM controlled_vocabulary_property cvp
+  LEFT JOIN controlled_vocabulary_view cv ON cvp.controlled_vocabulary_id = cv.controlled_vocabulary_id
+  LEFT JOIN species s ON cvp.species_id = s.species_id
+  LEFT JOIN genus g ON s.genus_id = g.genus_id
+  LEFT JOIN species_organ so ON cvp.species_organ_id = so.species_organ_id
+  LEFT JOIN organ o ON so.organ_id = o.organ_id
+  LEFT JOIN publication p ON cvp.publication_id = p.publication_id
+  LEFT JOIN website w ON cvp.website_id = w.website_id;

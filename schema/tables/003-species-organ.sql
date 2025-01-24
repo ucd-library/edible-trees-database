@@ -26,8 +26,8 @@ CREATE OR REPLACE VIEW species_organ_view AS
   LEFT JOIN organ o ON so.organ_id = o.organ_id
   LEFT JOIN pgdm_source sc ON sc.pgdm_source_id = s.pgdm_source_id;
 
-CREATE FUNCTION get_species_organ_id(
-  genius_name TEXT,
+CREATE OR REPLACE FUNCTION get_species_organ_id(
+  genus_name TEXT,
   species_name TEXT,
   organ_name TEXT
 ) RETURNS UUID AS $$
@@ -38,16 +38,16 @@ DECLARE
 BEGIN
 
   SELECT get_species_id(genus_name, species_name) INTO sid;
-  SELECT get_organ_id(organ_name, organ_name) INTO oid;
+  SELECT get_organ_id(organ_name) INTO oid;
 
   SELECT species_organ_id INTO soid FROM species_organ
-  WHERE species_id = gid AND organ_id = oid;
+  WHERE species_id = sid AND organ_id = oid;
 
   IF soid IS NULL THEN
     RAISE EXCEPTION 'Species Organ genus=%, species=%, organ=% does not exist', genus_name, species_name, organ_name;
   END IF;
 
-  RETURN sid;
+  RETURN soid;
 END;
 $$ LANGUAGE plpgsql;
 
