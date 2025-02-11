@@ -38,5 +38,5 @@ $PSQL -f ./tables/003-publication.sql
 $PSQL -f ./tables/003-website.sql
 $PSQL -f ./tables/004-controlled-vocabulary-property.sql
 $PSQL -f ./tables/004-measurement-property.sql
-$PSQL -f ./tables/004-property-input.sql
-$PSQL -f ./tables/004-tag-property.sql
+$PSQL -f ./tables/004-properties-input.sql
+# $PSQL -f ./tables/004-tag-property.sql
