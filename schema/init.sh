@@ -20,7 +20,7 @@ $PSQL -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";"
 export PGOPTIONS="--search_path=$SCHEMA,public"
 
 # types
-# psql -f ./tables/enums/qa_status.sql
+# #psql -f ./tables/enums/qa_status.sql
 
 # tables make sure when you add tables to put them in order
 $PSQL -f ./tables/000-pgdm-source.sql
@@ -38,5 +38,5 @@ $PSQL -f ./tables/003-publication.sql
 $PSQL -f ./tables/003-website.sql
 $PSQL -f ./tables/004-controlled-vocabulary-property.sql
 $PSQL -f ./tables/004-measurement-property.sql
-$PSQL -f ./tables/004-property-input.sql
-$PSQL -f ./tables/004-tag-property.sql
+$PSQL -f ./tables/004-properties-input.sql
+# $PSQL -f ./tables/004-tag-property.sql
