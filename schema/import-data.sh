@@ -20,7 +20,7 @@ PSQL="psql -U postgres"
 
 # pgdm insert -s "$PGSERVICE" -t genus_view -f $ROOT_DATA_FOLDER/sheets/schema/genus.csv || true
 # pgdm insert -s "$PGSERVICE" -t species_view -f $ROOT_DATA_FOLDER/sheets/schema/species.csv || true
-# # pgdm insert -s "$PGSERVICE" -t common_name_view -f $ROOT_DATA_FOLDER/sheets/schema/species_common_name.csv || true
+# pgdm insert -s "$PGSERVICE" -t common_name_view -f $ROOT_DATA_FOLDER/sheets/schema/species_common_name.csv || true
 # pgdm insert -s "$PGSERVICE" -t organ_view -f $ROOT_DATA_FOLDER/sheets/schema/organ.csv || true
 # pgdm insert -s "$PGSERVICE" -t species_organ_view -f $ROOT_DATA_FOLDER/sheets/schema/species_organ.csv || true
 # pgdm insert -s "$PGSERVICE" -t usda_zone_view -f $ROOT_DATA_FOLDER/sheets/schema/usda_zone.csv || true
