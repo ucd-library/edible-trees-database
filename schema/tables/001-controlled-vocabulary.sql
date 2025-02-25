@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS controlled_vocabulary_type (
   controlled_vocabulary_type_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL UNIQUE
 );
-CREATE INDEX controlled_vocabulary_type_name_idx ON controlled_vocabulary_type(name);
+CREATE INDEX IF NOT EXISTS controlled_vocabulary_type_name_idx ON controlled_vocabulary_type(name);
 
 -- Define controlled vocabulary types here
 INSERT INTO controlled_vocabulary_type (name) VALUES ('bloom_period') ON CONFLICT DO NOTHING;
@@ -39,9 +39,9 @@ CREATE TABLE IF NOT EXISTS controlled_vocabulary (
   pgdm_source_id UUID REFERENCES pgdm_source NOT NULL,
   UNIQUE(controlled_vocabulary_type_id, value)
 );
-CREATE INDEX controlled_vocabulary_source_id_idx ON controlled_vocabulary(pgdm_source_id);
-CREATE INDEX controlled_vocabulary_value_idx ON controlled_vocabulary(value);
-CREATE INDEX controlled_vocabulary_type_id_idx ON controlled_vocabulary(controlled_vocabulary_type_id);
+CREATE INDEX IF NOT EXISTS controlled_vocabulary_source_id_idx ON controlled_vocabulary(pgdm_source_id);
+CREATE INDEX IF NOT EXISTS controlled_vocabulary_value_idx ON controlled_vocabulary(value);
+CREATE INDEX IF NOT EXISTS controlled_vocabulary_type_id_idx ON controlled_vocabulary(controlled_vocabulary_type_id);
 
 -- VIEW
 CREATE OR REPLACE VIEW controlled_vocabulary_view AS
@@ -234,12 +234,24 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- RULES
-CREATE TRIGGER controlled_vocabulary_insert_trig
-  INSTEAD OF INSERT ON
-  controlled_vocabulary_view FOR EACH ROW 
-  EXECUTE PROCEDURE insert_controlled_vocabulary_from_trig();
+DO
+$$BEGIN
+  CREATE TRIGGER controlled_vocabulary_insert_trig
+    INSTEAD OF INSERT ON
+    controlled_vocabulary_view FOR EACH ROW 
+    EXECUTE PROCEDURE insert_controlled_vocabulary_from_trig();
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'The trigger controlled_vocabulary_insert_trig already exists.';
+END$$;
 
-CREATE TRIGGER controlled_vocabulary_update_trig
-  INSTEAD OF UPDATE ON
-  controlled_vocabulary_view FOR EACH ROW 
-  EXECUTE PROCEDURE update_controlled_vocabulary_from_trig();
+DO
+$$BEGIN
+  CREATE TRIGGER controlled_vocabulary_update_trig
+    INSTEAD OF UPDATE ON
+    controlled_vocabulary_view FOR EACH ROW 
+    EXECUTE PROCEDURE update_controlled_vocabulary_from_trig();
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'The trigger controlled_vocabulary_update_trig already exists.';
+END$$;

@@ -1,13 +1,12 @@
 -- TABLE
-DROP TABLE IF EXISTS tag_type CASCADE;
-CREATE TABLE tag_type (
+CREATE TABLE IF NOT EXISTS tag_type (
   tag_type_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   pgdm_source_id UUID REFERENCES pgdm_source NOT NULL,
   name TEXT NOT NULL,
   description TEXT
 );
-CREATE INDEX tag_type_source_id_idx ON tag_type(pgdm_source_id);
-CREATE INDEX tag_type_name_idx ON tag_type(name);
+CREATE INDEX IF NOT EXISTS tag_type_source_id_idx ON tag_type(pgdm_source_id);
+CREATE INDEX IF NOT EXISTS tag_type_name_idx ON tag_type(name);
 
 -- VIEW
 CREATE OR REPLACE VIEW tag_type_view AS
@@ -120,12 +119,24 @@ END ;
 $$ LANGUAGE plpgsql;
 
 -- RULES
+DO
+$$BEGIN
 CREATE TRIGGER tag_type_insert_trig
   INSTEAD OF INSERT ON
   tag_type_view FOR EACH ROW 
   EXECUTE PROCEDURE insert_tag_type_from_trig();
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'The trigger tag_type_insert_trig already exists.';
+END$$;
 
+DO
+$$BEGIN
 CREATE TRIGGER tag_type_update_trig
   INSTEAD OF UPDATE ON
   tag_type_view FOR EACH ROW 
   EXECUTE PROCEDURE update_tag_type_from_trig();
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'The trigger tag_type_update_trig already exists.';
+END$$;

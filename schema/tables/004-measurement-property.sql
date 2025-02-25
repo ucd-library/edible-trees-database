@@ -8,19 +8,17 @@ CREATE TABLE IF NOT EXISTS measurement_property (
   measurement_value FLOAT,
   uncertainty FLOAT,
   precision FLOAT,
-  usda_zone_id TEXT REFERENCES usda_zone(usda_zone_id) NOT NULL,
   publication_id UUID REFERENCES publication(publication_id),
   website_id UUID REFERENCES website(website_id),
   accessed DATE NOT NULL
 );
-CREATE INDEX measurement_property_source_id_idx ON measurement_property(pgdm_source_id);
-CREATE INDEX measurement_property_species_id_idx ON measurement_property(species_id);
-CREATE INDEX measurement_property_species_organ_id_idx ON measurement_property(species_organ_id);
-CREATE INDEX measurement_property_measurement_id_idx ON measurement_property(measurement_id);
-CREATE INDEX measurement_property_usda_zone_id_idx ON measurement_property(usda_zone_id);
-CREATE INDEX measurement_property_publication_id_idx ON measurement_property(publication_id);
-CREATE INDEX measurement_property_website_id_idx ON measurement_property(website_id);
-CREATE INDEX measurement_property_accessed_idx ON measurement_property(accessed);
+CREATE INDEX IF NOT EXISTS measurement_property_source_id_idx ON measurement_property(pgdm_source_id);
+CREATE INDEX IF NOT EXISTS measurement_property_species_id_idx ON measurement_property(species_id);
+CREATE INDEX IF NOT EXISTS measurement_property_species_organ_id_idx ON measurement_property(species_organ_id);
+CREATE INDEX IF NOT EXISTS measurement_property_measurement_id_idx ON measurement_property(measurement_id);
+CREATE INDEX IF NOT EXISTS measurement_property_publication_id_idx ON measurement_property(publication_id);
+CREATE INDEX IF NOT EXISTS measurement_property_website_id_idx ON measurement_property(website_id);
+CREATE INDEX IF NOT EXISTS measurement_property_accessed_idx ON measurement_property(accessed);
 
 -- CREATE TRIGGER check_measurement_measurement_property_values_trigger
 -- BEFORE INSERT OR UPDATE ON measurement_property

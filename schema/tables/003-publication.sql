@@ -13,8 +13,8 @@ CREATE TABLE IF NOT EXISTS publication (
   page_end INTEGER,
   url TEXT
 );
-CREATE INDEX publication_source_id_idx ON publication(pgdm_source_id);
-CREATE INDEX publication_doi_idx ON publication(doi);
+CREATE INDEX IF NOT EXISTS publication_source_id_idx ON publication(pgdm_source_id);
+CREATE INDEX IF NOT EXISTS publication_doi_idx ON publication(doi);
 
 -- VIEW
 CREATE OR REPLACE VIEW publication_view AS
@@ -167,12 +167,24 @@ END ;
 $$ LANGUAGE plpgsql;
 
 -- RULES
+DO
+$$BEGIN
 CREATE TRIGGER publication_insert_trig
   INSTEAD OF INSERT ON
   publication_view FOR EACH ROW 
   EXECUTE PROCEDURE insert_publication_from_trig();
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'The trigger publication_insert_trig already exists.';
+END$$;
 
+DO
+$$BEGIN
 CREATE TRIGGER publication_update_trig
   INSTEAD OF UPDATE ON
   publication_view FOR EACH ROW 
   EXECUTE PROCEDURE update_publication_from_trig();
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'The trigger publication_update_trig already exists.';
+END$$;

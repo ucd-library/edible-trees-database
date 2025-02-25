@@ -16,7 +16,6 @@ BEGIN
   INSERT INTO pgdm_tables (table_view, name, uid) VALUES ('common_name_view', 'common_name', 'common_name_id');
   INSERT INTO pgdm_tables (table_view, name, uid) VALUES ('controlled_vocabulary_view', 'controlled_vocabulary', 'controlled_vocabulary_id');
   INSERT INTO pgdm_tables (table_view, name, uid) VALUES ('species_organ_view', 'species_organ', 'species_organ_id');
-  INSERT INTO pgdm_tables (table_view, name, uid) VALUES ('usda_zone_view', 'usda_zone', 'usda_zone_id');
   INSERT INTO pgdm_tables (table_view, name, uid) VALUES ('publication_view', 'publication', 'publication_id');
   INSERT INTO pgdm_tables (table_view, name, uid) VALUES ('website_view', 'website', 'website_id');
   INSERT INTO pgdm_tables (table_view, name, uid) VALUES ('properties_input', 'properties_input', 'property_input_id');

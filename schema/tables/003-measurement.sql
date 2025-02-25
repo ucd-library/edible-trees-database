@@ -1,12 +1,11 @@
 -- TABLE
-DROP TABLE IF EXISTS measurement CASCADE;
-CREATE TABLE measurement (
+CREATE TABLE IF NOT EXISTS measurement (
   measurement_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   pgdm_source_id UUID REFERENCES pgdm_source NOT NULL,
   name TEXT NOT NULL,
   unit_id UUID REFERENCES unit NOT NULL
 );
-CREATE INDEX measurement_source_id_idx ON measurement(pgdm_source_id);
+CREATE INDEX IF NOT EXISTS measurement_source_id_idx ON measurement(pgdm_source_id);
 
 -- VIEW
 CREATE OR REPLACE VIEW measurement_view AS
@@ -128,12 +127,24 @@ END ;
 $$ LANGUAGE plpgsql;
 
 -- RULES
+DO
+$$BEGIN
 CREATE TRIGGER measurement_insert_trig
   INSTEAD OF INSERT ON
   measurement_view FOR EACH ROW 
   EXECUTE PROCEDURE insert_measurement_from_trig();
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'The trigger measurement_insert_trig already exists.';
+END$$;
 
+DO
+$$BEGIN
 CREATE TRIGGER measurement_update_trig
   INSTEAD OF UPDATE ON
   measurement_view FOR EACH ROW 
   EXECUTE PROCEDURE update_measurement_from_trig();
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'The trigger measurement_update_trig already exists.';
+END$$;

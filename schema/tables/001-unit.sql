@@ -1,11 +1,10 @@
 -- TABLE
-DROP TABLE IF EXISTS unit CASCADE;
-CREATE TABLE unit (
+CREATE TABLE IF NOT EXISTS unit (
   unit_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   pgdm_source_id UUID REFERENCES pgdm_source NOT NULL,
   name TEXT NOT NULL UNIQUE
 );
-CREATE INDEX unit_source_id_idx ON unit(pgdm_source_id);
+CREATE INDEX IF NOT EXISTS unit_source_id_idx ON unit(pgdm_source_id);
 
 -- VIEW
 CREATE OR REPLACE VIEW unit_view AS
@@ -113,12 +112,24 @@ END ;
 $$ LANGUAGE plpgsql;
 
 -- RULES
+DO
+$$BEGIN
 CREATE TRIGGER unit_insert_trig
   INSTEAD OF INSERT ON
   unit_view FOR EACH ROW 
   EXECUTE PROCEDURE insert_unit_from_trig();
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'The trigger unit_insert_trig already exists.';
+END$$;
 
+DO
+$$BEGIN
 CREATE TRIGGER unit_update_trig
   INSTEAD OF UPDATE ON
   unit_view FOR EACH ROW 
   EXECUTE PROCEDURE update_unit_from_trig();
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'The trigger unit_update_trig already exists.';
+END$$;

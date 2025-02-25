@@ -29,8 +29,8 @@ $PSQL -f ./tables/001-genus.sql
 $PSQL -f ./tables/001-organ.sql
 $PSQL -f ./tables/001-tag-type.sql
 $PSQL -f ./tables/001-unit.sql
-$PSQL -f ./tables/001-usda-zone.sql
 $PSQL -f ./tables/002-species.sql
+$PSQL -f ./tables/003-species-location.sql
 $PSQL -f ./tables/003-common-name.sql
 $PSQL -f ./tables/003-measurement.sql
 $PSQL -f ./tables/003-species-organ.sql

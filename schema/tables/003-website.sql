@@ -1,6 +1,5 @@
 -- TABLE
-DROP TABLE IF EXISTS website CASCADE;
-CREATE TABLE website (
+CREATE TABLE IF NOT EXISTS website (
   website_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   pgdm_source_id UUID REFERENCES pgdm_source NOT NULL,
   name TEXT NOT NULL,
@@ -8,7 +7,7 @@ CREATE TABLE website (
   url TEXT NOT NULL UNIQUE,
   organization TEXT
 );
-CREATE INDEX website_source_id_idx ON website(pgdm_source_id);
+CREATE INDEX IF NOT EXISTS website_source_id_idx ON website(pgdm_source_id);
 
 -- VIEW
 CREATE OR REPLACE VIEW website_view AS
@@ -131,12 +130,24 @@ END ;
 $$ LANGUAGE plpgsql;
 
 -- RULES
+DO
+$$BEGIN
 CREATE TRIGGER website_insert_trig
   INSTEAD OF INSERT ON
   website_view FOR EACH ROW 
   EXECUTE PROCEDURE insert_website_from_trig();
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'The trigger website_insert_trig already exists.';
+END$$;
 
+DO
+$$BEGIN
 CREATE TRIGGER website_update_trig
   INSTEAD OF UPDATE ON
   website_view FOR EACH ROW 
   EXECUTE PROCEDURE update_website_from_trig();
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'The trigger website_update_trig already exists.';
+END$$;

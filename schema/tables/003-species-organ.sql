@@ -5,8 +5,8 @@ CREATE TABLE IF NOT EXISTS species_organ (
   species_id UUID NOT NULL REFERENCES species(species_id),
   organ_id UUID NOT NULL REFERENCES organ(organ_id)
 );
-CREATE INDEX species_species_organ_id_idx ON species_organ(species_id);
-CREATE INDEX species_organ_organ_id_idx ON species_organ(organ_id);
+CREATE INDEX IF NOT EXISTS species_species_organ_id_idx ON species_organ(species_id);
+CREATE INDEX IF NOT EXISTS species_organ_organ_id_idx ON species_organ(organ_id);
 
 -- join the species, genus, common_name, and organ tables for the 
 -- full species organ view with text names
@@ -138,10 +138,22 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- TRIGGERS
+DO
+$$BEGIN
 CREATE TRIGGER insert_species_organ_trig
 INSTEAD OF INSERT ON species_organ_view
 FOR EACH ROW EXECUTE FUNCTION insert_species_organ_from_trig();
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'The trigger insert_species_organ_trig already exists.';
+END$$;
 
+DO
+$$BEGIN
 CREATE TRIGGER update_species_organ_trig
 INSTEAD OF UPDATE ON species_organ_view
 FOR EACH ROW EXECUTE FUNCTION update_species_organ_from_trig();
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'The trigger update_species_organ_trig already exists.';
+END$$;

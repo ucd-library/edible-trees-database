@@ -5,7 +5,6 @@ CREATE TABLE IF NOT EXISTS properties_input (
   genus_name TEXT NOT NULL,
   species_name TEXT NOT NULL,
   organ_name TEXT,
-  usda_zone TEXT NOT NULL,
   values TEXT NOT NULL,
   type TEXT NOT NULL,
   unit TEXT,
@@ -22,7 +21,6 @@ CREATE OR REPLACE FUNCTION insert_properties(
   genus_name TEXT,
   species_name TEXT,
   organ_name TEXT,
-  usda_zone TEXT,
   "values" TEXT,
   type TEXT,
   "precision" FLOAT,
@@ -33,7 +31,6 @@ CREATE OR REPLACE FUNCTION insert_properties(
 ) RETURNS UUID AS $$
 DECLARE
   sid UUID;
-  zone TEXT;
   value TEXT;
   is_update BOOLEAN;
 BEGIN
@@ -48,24 +45,21 @@ BEGIN
   SELECT get_source_id(pgdm_source_name) INTO sid;
 
   FOR value IN SELECT unnest(string_to_array(values, ',')) AS value LOOP
-    FOR zone IN SELECT unnest(string_to_array(usda_zone, ',')) AS zone LOOP
-      PERFORM insert_property(
-        property_input_id_in := property_input_id,
-        genus_name_in := genus_name,
-        species_name_in := species_name,
-        organ_name_in := organ_name,
-        usda_zone_in := zone,
-        value_in := value,
-        type_in := type,
-        unit_in := unit,
-        precision_in := precision,
-        uncertainty_in := uncertainty,
-        data_source_in := data_source,
-        accessed_in := accessed,
-        pgdm_source_id_in := sid,
-        is_update_in := is_update
-      );
-    END LOOP;
+    PERFORM insert_property(
+      property_input_id_in := property_input_id,
+      genus_name_in := genus_name,
+      species_name_in := species_name,
+      organ_name_in := organ_name,
+      value_in := value,
+      type_in := type,
+      unit_in := unit,
+      precision_in := precision,
+      uncertainty_in := uncertainty,
+      data_source_in := data_source,
+      accessed_in := accessed,
+      pgdm_source_id_in := sid,
+      is_update_in := is_update
+    );
   END LOOP;
 
   RETURN property_input_id;
@@ -114,7 +108,6 @@ CREATE OR REPLACE FUNCTION insert_property(
   genus_name_in TEXT,
   species_name_in TEXT,
   organ_name_in TEXT,
-  usda_zone_in TEXT,
   value_in TEXT,
   type_in TEXT,
   unit_in TEXT,
@@ -195,7 +188,6 @@ BEGIN
         species_id = sid,
         species_organ_id = soid,
         controlled_vocabulary_id = vid,
-        usda_zone_id = usda_zone_in,
         publication_id = pdsid,
         website_id = wdsid,
         accessed = accessed_in
@@ -204,10 +196,10 @@ BEGIN
     ELSE
       INSERT INTO controlled_vocabulary_property
         (pgdm_source_id, property_input_id, species_id, species_organ_id, 
-        controlled_vocabulary_id, usda_zone_id, publication_id, website_id, accessed) 
+        controlled_vocabulary_id, publication_id, website_id, accessed) 
       VALUES
         (pgdm_source_id_in, property_input_id_in, sid, soid, 
-        vid, usda_zone_in, pdsid, wdsid, accessed_in);
+        vid, pdsid, wdsid, accessed_in);
     END IF;
 
 
@@ -222,7 +214,6 @@ BEGIN
           species_organ_id = soid,
           measurement_id = vid,
           measurement_value = value_in::double precision,
-          usda_zone_id = usda_zone_in,
           publication_id = pdsid,
           website_id = wdsid,
           accessed = accessed_in
@@ -232,10 +223,10 @@ BEGIN
 
       INSERT INTO measurement_property
         (pgdm_source_id, property_input_id, species_id, species_organ_id, 
-        measurement_id, measurement_value, usda_zone_id, publication_id, website_id, accessed) 
+        measurement_id, measurement_value, publication_id, website_id, accessed) 
       VALUES
         (pgdm_source_id_in, property_input_id_in, sid, soid, 
-        vid, value_in::double precision, usda_zone_in, pdsid, wdsid, accessed_in);
+        vid, value_in::double precision, pdsid, wdsid, accessed_in);
 
     END IF;
 
@@ -249,7 +240,6 @@ BEGIN
         species_organ_id = soid,
         tag_type_id = vid,
         tag_value = value_in,
-        usda_zone_id = usda_zone_in,
         publication_id = pdsid,
         website_id = wdsid,
         accessed = accessed_in
@@ -259,10 +249,10 @@ BEGIN
 
       INSERT INTO tag_property
         (pgdm_source_id, property_input_id, species_id, species_organ_id, 
-        tag_type_id, tag_value, usda_zone_id, publication_id, website_id, accessed) 
+        tag_type_id, tag_value, publication_id, website_id, accessed) 
       VALUES
         (pgdm_source_id_in, property_input_id_in, sid, soid, 
-        vid, value_in, usda_zone_in, pdsid, wdsid, accessed_in);
+        vid, value_in, pdsid, wdsid, accessed_in);
     END IF;
 
   ELSE
@@ -283,7 +273,6 @@ BEGIN
     genus_name := NEW.genus_name,
     species_name := NEW.species_name,
     organ_name := NEW.organ_name,
-    usda_zone := NEW.usda_zone,
     "values" := NEW.values,
     type := NEW.type,
     "precision" := NEW.precision,
@@ -314,7 +303,6 @@ BEGIN
     genus_name := NEW.genus_name,
     species_name := NEW.species_name,
     organ_name := NEW.organ_name,
-    usda_zone := NEW.usda_zone,
     "values" := NEW.values,
     type := NEW.type,
     "precision" := NEW.precision,
@@ -344,21 +332,39 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create insert trigger
+DO
+$$BEGIN
 CREATE TRIGGER before_insert_properties_input
 BEFORE INSERT ON properties_input
 FOR EACH ROW
 EXECUTE FUNCTION properties_input_insert_trigger();
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'The trigger before_insert_properties_input already exists.';
+END$$;
 
 -- Create update trigger
+DO
+$$BEGIN
 CREATE TRIGGER before_update_properties_input
 BEFORE UPDATE ON properties_input
 FOR EACH ROW
 EXECUTE FUNCTION properties_input_update_trigger();
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'The trigger before_update_properties_input already exists.';
+END$$;
 
+DO
+$$BEGIN
 CREATE TRIGGER after_delete_properties_input
 BEFORE DELETE ON properties_input
 FOR EACH ROW
 EXECUTE FUNCTION properties_input_delete_trigger();
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'The trigger after_delete_properties_input already exists.';
+END$$;
 
 -- trigger check for *_property tables
 CREATE OR REPLACE FUNCTION check_property_values() RETURNS TRIGGER AS $$

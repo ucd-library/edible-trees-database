@@ -101,13 +101,24 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
+DO
+$$BEGIN
 CREATE TRIGGER organ_insert_trig
   INSTEAD OF INSERT ON
   organ_view FOR EACH ROW 
   EXECUTE PROCEDURE insert_organ_from_trig();
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'The trigger organ_insert_trig already exists.';
+END$$;
 
+DO
+$$BEGIN
 CREATE TRIGGER organ_update_trig
   INSTEAD OF UPDATE ON
   organ_view FOR EACH ROW 
   EXECUTE PROCEDURE update_organ_from_trig();
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'The trigger organ_update_trig already exists.';
+END$$;
