@@ -129,6 +129,7 @@ DECLARE
   is_tag BOOLEAN;
   is_pub BOOLEAN;
   is_web BOOLEAN;
+  hostname TEXT;
 BEGIN
   SELECT get_species_id(genus_name_in, species_name_in) INTO sid;
   IF organ_name_in IS NOT NULL THEN
@@ -142,10 +143,14 @@ BEGIN
   ) INTO is_pub;
 
   IF NOT is_pub THEN
+    -- Extract the hostname from the URL
+    SELECT substring(data_source_in FROM '^(https?:\/\/[^\/?#]+)') INTO hostname;
+
     SELECT EXISTS (
       SELECT true 
       FROM website w
-      WHERE w.url = data_source_in
+      WHERE w.url = data_source_in OR
+            w.url = hostname
     ) INTO is_web;
   END IF;
 

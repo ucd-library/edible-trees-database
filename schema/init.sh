@@ -10,7 +10,7 @@ cd $ROOT_DIR
 
 export SCHEMA=edible_trees;
 export PGHOST=localhost;
-# export PGUSER=postgres
+export PGUSER=postgres
 PSQL="psql -U postgres"
 # export PGSERVICE=pgfarm
 # export PGDATABASE="library/edible-trees"

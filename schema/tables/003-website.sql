@@ -112,17 +112,22 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_website_id(url_in TEXT) RETURNS UUID AS $$   
 DECLARE
   wid UUID;
+  hostname TEXT;
 BEGIN
+
+  -- Extract the hostname from the URL
+  SELECT substring(url_in FROM '^(https?:\/\/[^\/?#]+)') INTO hostname;
 
   SELECT 
     website_id INTO wid 
   FROM 
     website w 
   WHERE 
-    w.url = url_in;
+    w.url = url_in OR 
+    w.url = hostname;
 
   IF (wid IS NULL) THEN
-    RAISE EXCEPTION 'Unknown website: %', url_in;
+    RAISE EXCEPTION 'Unknown data source website: hostname=% fullurl=%', hostname, url_in;
   END IF;
   
   RETURN wid;
