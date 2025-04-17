@@ -7,7 +7,7 @@ CREATE INDEX IF NOT EXISTS controlled_vocabulary_type_name_idx ON controlled_voc
 
 -- Define controlled vocabulary types here
 INSERT INTO controlled_vocabulary_type (name) VALUES ('bloom_period') ON CONFLICT DO NOTHING;
-INSERT INTO controlled_vocabulary_type (name) VALUES ('fire_tolerance') ON CONFLICT DO NOTHING;
+INSERT INTO controlled_vocabulary_type (name) VALUES ('fire_response') ON CONFLICT DO NOTHING;
 INSERT INTO controlled_vocabulary_type (name) VALUES ('flower_anthers') ON CONFLICT DO NOTHING;
 INSERT INTO controlled_vocabulary_type (name) VALUES ('flower_color') ON CONFLICT DO NOTHING;
 INSERT INTO controlled_vocabulary_type (name) VALUES ('flower_direction') ON CONFLICT DO NOTHING;
