@@ -24,7 +24,7 @@ CREATE OR REPLACE VIEW species_organ_view AS
   LEFT JOIN species s ON so.species_id = s.species_id
   LEFT JOIN genus g ON s.genus_id = g.genus_id
   LEFT JOIN organ o ON so.organ_id = o.organ_id
-  LEFT JOIN pgdm_source sc ON sc.pgdm_source_id = s.pgdm_source_id;
+  LEFT JOIN pgdm_source sc ON sc.pgdm_source_id = so.pgdm_source_id;
 
 CREATE OR REPLACE FUNCTION get_species_organ_id(
   genus_name TEXT,

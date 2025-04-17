@@ -9,11 +9,11 @@ ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd $ROOT_DIR
 
 export SCHEMA=edible_trees;
-export PGHOST=localhost;
-export PGUSER=postgres
+# export PGHOST=localhost;
+# export PGUSER=postgres
 PSQL="psql -U postgres"
-# export PGSERVICE=pgfarm
-# export PGDATABASE="library/edible-trees"
+export PGSERVICE=pgfarm
+export PGDATABASE="library/edible-trees"
 
 $PSQL -c "CREATE SCHEMA IF NOT EXISTS $SCHEMA;"
 $PSQL -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";"
