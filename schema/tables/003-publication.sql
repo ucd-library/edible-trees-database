@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS publication (
   publication_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   pgdm_source_id UUID REFERENCES pgdm_source NOT NULL,
-  doi TEXT NOT NULL UNIQUE,
+  unique_id TEXT UNIQUE,
   author TEXT,
   title TEXT NOT NULL,
   journal TEXT,
@@ -14,13 +14,13 @@ CREATE TABLE IF NOT EXISTS publication (
   url TEXT
 );
 CREATE INDEX IF NOT EXISTS publication_source_id_idx ON publication(pgdm_source_id);
-CREATE INDEX IF NOT EXISTS publication_doi_idx ON publication(doi);
+CREATE INDEX IF NOT EXISTS publication_unique_id_idx ON publication(unique_id);
 
 -- VIEW
 CREATE OR REPLACE VIEW publication_view AS
   SELECT
     p.publication_id AS publication_id,
-    p.doi as doi,
+    p.unique_id as unique_id,
     p.author as author,
     p.title as title,
     p.journal as journal,
@@ -38,7 +38,7 @@ LEFT JOIN pgdm_source sc ON p.pgdm_source_id = sc.pgdm_source_id;
 -- FUNCTIONS
 CREATE OR REPLACE FUNCTION insert_publication (
   publication_id UUID,
-  doi TEXT,
+  unique_id TEXT,
   author TEXT,
   title TEXT,
   journal TEXT,
@@ -59,9 +59,9 @@ BEGIN
   SELECT get_source_id(source_name) INTO sid;
 
   INSERT INTO publication (
-    publication_id, doi, author, title, journal, year, volume, issue, page_start, page_end, url, pgdm_source_id
+    publication_id, unique_id, author, title, journal, year, volume, issue, page_start, page_end, url, pgdm_source_id
   ) VALUES (
-    publication_id, doi, author, title, journal, year, volume, issue, page_start, page_end, url, sid
+    publication_id, unique_id, author, title, journal, year, volume, issue, page_start, page_end, url, sid
   );
 
 EXCEPTION WHEN raise_exception THEN
@@ -71,7 +71,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION update_publication (
   publication_id_in UUID,
-  doi_in TEXT,
+  unique_id_in TEXT,
   author_in TEXT,
   title_in TEXT,
   journal_in TEXT,
@@ -86,9 +86,9 @@ DECLARE
 BEGIN
 
   UPDATE publication SET (
-    doi, author, title, journal, year, volume, issue, page_start, page_end, url 
+    unique_id, author, title, journal, year, volume, issue, page_start, page_end, url 
   ) = (
-    doi_in, author_in, title_in, journal_in, year_in, volume_in, issue_in, page_start_in, page_end_in, url_in
+    unique_id_in, author_in, title_in, journal_in, year_in, volume_in, issue_in, page_start_in, page_end_in, url_in
   ) WHERE
     publication_id = publication_id_in;
 
@@ -103,7 +103,7 @@ RETURNS TRIGGER AS $$
 BEGIN
   PERFORM insert_publication(
     publication_id := NEW.publication_id,
-    doi := NEW.doi,
+    unique_id := NEW.unique_id,
     author := NEW.author,
     title := NEW.title,
     journal := NEW.journal,
@@ -127,7 +127,7 @@ RETURNS TRIGGER AS $$
 BEGIN
   PERFORM update_publication(
     publication_id_in := NEW.publication_id,
-    doi_in := NEW.doi,
+    unique_id_in := NEW.unique_id,
     author_in := NEW.author,
     title_in := NEW.title,
     journal_in := NEW.journal,
@@ -146,7 +146,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- FUNCTION GETTER
-CREATE OR REPLACE FUNCTION get_publication_id(doi_in TEXT) RETURNS UUID AS $$   
+CREATE OR REPLACE FUNCTION get_publication_id(unique_id_in TEXT) RETURNS UUID AS $$   
 DECLARE
   pid UUID;
 BEGIN
@@ -156,10 +156,10 @@ BEGIN
   FROM 
     publication p 
   WHERE  
-    p.doi = doi_in;
+    p.unique_id = unique_id_in;
 
   IF (pid IS NULL) THEN
-    RAISE EXCEPTION 'Unknown publication: %', doi_in;
+    RAISE EXCEPTION 'Unknown publication: %', unique_id_in;
   END IF;
   
   RETURN pid;

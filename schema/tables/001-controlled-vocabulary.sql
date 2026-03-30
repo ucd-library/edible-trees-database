@@ -33,6 +33,8 @@ INSERT INTO controlled_vocabulary_type (name) VALUES ('leaf_retention') ON CONFL
 INSERT INTO controlled_vocabulary_type (name) VALUES ('toxicity') ON CONFLICT DO NOTHING;
 INSERT INTO controlled_vocabulary_type (name) VALUES ('species_common_name') ON CONFLICT DO NOTHING;
 INSERT INTO controlled_vocabulary_type (name) VALUES ('usda_zone') ON CONFLICT DO NOTHING;
+INSERT INTO controlled_vocabulary_type (name) VALUES ('drought_tolerance') ON CONFLICT DO NOTHING;
+INSERT INTO controlled_vocabulary_type (name) VALUES ('reproductive_system') ON CONFLICT DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS controlled_vocabulary (
   controlled_vocabulary_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
