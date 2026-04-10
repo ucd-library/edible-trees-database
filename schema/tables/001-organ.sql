@@ -46,11 +46,9 @@ DECLARE
 
 BEGIN
 
-  UPDATE organ SET (
-    name 
-  ) = (
-    name_in
-  ) WHERE
+  UPDATE organ SET
+    name = name_in
+  WHERE
     organ_id = organ_id_in;
 
 EXCEPTION WHEN raise_exception THEN
@@ -76,7 +74,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION update_organ_from_trig() 
 RETURNS TRIGGER AS $$   
 BEGIN
-  PERFORM organ_genus(
+  PERFORM update_organ(
     organ_id_in := NEW.organ_id,
     name_in := NEW.name
   );

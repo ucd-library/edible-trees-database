@@ -48,11 +48,9 @@ DECLARE
 
 BEGIN
 
-  UPDATE unit SET (
-    name 
-  ) = (
-    name_in
-  ) WHERE
+  UPDATE unit SET
+    name = name_in
+  WHERE
     unit_id = unit_id_in;
 
 EXCEPTION WHEN raise_exception THEN

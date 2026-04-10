@@ -49,11 +49,9 @@ DECLARE
 
 BEGIN
 
-  UPDATE genus SET (
-    name 
-  ) = (
-    name_in
-  ) WHERE
+  UPDATE genus SET
+    name = name_in
+  WHERE
     genus_id = genus_id_in;
 
 EXCEPTION WHEN raise_exception THEN
